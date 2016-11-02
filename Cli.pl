@@ -4,7 +4,7 @@ board(
 	[empty, empty, empty, empty], 
 	[[w, 0, 0], empty, empty, empty, empty],
 	[empty, empty, empty, empty, [b, 3, 1], empty],
-	[empty, empty, [b, 0, 6], empty, empty, empty, empty],
+	[empty, empty, [b, 0, 6], [w, 0, 2], empty, empty, empty],
 	[empty, empty, empty, empty, empty, empty],
 	[empty, empty, empty, [w, 0, 2], empty],
 	[empty, [w, 1, 1], empty, empty] 

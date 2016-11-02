@@ -39,19 +39,19 @@ setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
 	
 setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
 	PieceTo \= empty,
-	getPencilsOfPiece(PieceFrom, PencilsFrom),
-	getPencilsOfPiece(PieceTo, PencilsTo),
-	PencilsFrom > PencilsTo, 
+	getPincersOfPiece(PieceFrom, PincersFrom),
+	getPincersOfPiece(PieceTo, PincersTo),
+	PincersFrom > PincersTo, 
 	setPiece(RowTo, ColTo, PieceFrom, BoardIn, BoardOut).
 	
 setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
 	PieceTo \= empty,
-	getPencilsOfPiece(PieceFrom, PencilsFrom),
-	getPencilsOfPiece(PieceTo, PencilsTo),
-	PencilsTo > PencilsFrom, 
+	getPincersOfPiece(PieceFrom, PincersFrom),
+	getPincersOfPiece(PieceTo, PincersTo),
+	PincersTo > PincersFrom, 
 	setPiece(RowTo, ColTo, PieceTo, BoardIn, BoardOut).
 
-getPencilsOfPiece([_, _, Pencils], Pencils).
+getPincersOfPiece([_, _, Pincers], Pincers).
 
 % Se existe um caminho entre 'NoInicio' e 'NoFim' com distancia menor ou igual
 % a 'DistMax', retorna 'yes'.
@@ -151,32 +151,25 @@ connected([RowFrom, ColFrom], [RowTo, ColTo]) :-
 	ColTo is ColFrom - 1,
 	validPosition(RowTo, ColTo).
 	
-validPosition(Row, Col) :-
-	Row =:= 1,
+validPosition(1, Col) :-
 	Col =< 4,
 	Col >= 1.
-validPosition(Row, Col) :-
-	Row =:= 2,
+validPosition(2, Col) :-
 	Col =< 5,
 	Col >= 1.
-validPosition(Row, Col) :-
-	Row =:= 3,
+validPosition(3, Col) :-
 	Col =< 6,
 	Col >= 1.
-validPosition(Row, Col) :-
-	Row =:= 4,
+validPosition(4, Col) :-
 	Col =< 7,
 	Col >= 1.
-validPosition(Row, Col) :-
-	Row =:= 5,
+validPosition(5, Col) :-
 	Col =< 6,
 	Col >= 1.
-validPosition(Row, Col) :-
-	Row =:= 6,
+validPosition(6, Col) :-
 	Col =< 5,
 	Col >= 1.
-validPosition(Row, Col) :-
-	Row =:= 7,
+validPosition(7, Col) :-
 	Col =< 4,
 	Col >= 1.
 
@@ -260,4 +253,93 @@ addLeg(Color, Row, Column, BoardIn, BoardOut):-
 
 % Capturar adaptoid's com uma determinada cor.
 %                  +       +        -
-captureAdpatoids(Color, BoardIn, BoardOut).
+captureAdaptoids(Color, BoardIn, BoardOut):-
+    captureAdaptoidsInRows(Color, BoardIn, BoardOut, 1).
+
+captureAdaptoidsInRows(_, _, [], 8).
+captureAdaptoidsInRows(Color, BoardIn, [RowOut |BoardOut], Row):-
+    captureInRow(Color, BoardIn, Row, 1, RowOut ),
+    R is Row+1,
+    captureAdaptoidsInRows(Color, BoardIn, BoardOut,R).
+
+captureInRow(_, _ ,1,5, []).
+captureInRow(_, _ ,2,6, []).
+captureInRow(_, _ ,3,7, []).
+captureInRow(_, _ ,4,8, []).
+captureInRow(_, _ ,5,7, []).
+captureInRow(_, _ ,6,6, []).
+captureInRow(_, _ ,7,5, []).
+captureInRow(Color, Board, Row, Col, [empty |RowOut]):-
+    getPiece(Row,Col,Board, Piece),
+    Piece = [Color, Legs, Pincers],
+    Total is Legs + Pincers,
+    %check how many surronding cells are empty
+    getSurrondingEmptyCells(Board,Row,Col,Num),
+    Num < Total, !,
+    Col1 is Col+1,
+    captureInRow(Color, Board, Row, Col1, RowOut).
+captureInRow(Color, Board, Row, Col, [Piece |RowOut]):-
+    getPiece(Row,Col,Board, Piece),
+    Col1 is Col+1,
+    captureInRow(Color, Board, Row, Col1, RowOut).
+    
+getSurrondingEmptyCells(Board,Row,Col,Num):-
+    isRightEmpty(Board,Row,Col, N1),
+    isLeftEmpty(Board,Row,Col, N2),
+    isTopRightEmpty(Board,Row,Col, N3),
+    isTopLeftEmpty(Board,Row,Col, N4),
+    isBottomRightEmpty(Board,Row,Col, N5),
+    isBottomLeftEmpty(Board,Row,Col, N6),
+    Num is N1 + N2 + N3 + N4 + N5 + N6.
+    
+isRightEmpty(Board,Row,Col, 1):-
+    C is Col + 1,
+    validPosition(Row, C),
+    getPiece(Row,C,Board,empty), !.
+isRightEmpty(_,_,_, 0).
+
+isLeftEmpty(Board,Row,Col, 1):-
+    C is Col - 1,
+    validPosition(Row, C),
+    getPiece(Row,C,Board,empty), !.
+isLeftEmpty(_,_,_, 0).
+
+isTopRightEmpty(Board,Row,Col, 1):-
+    R is Row - 1,
+    validPosition(R, Col),
+    getPiece(R,Col,Board,empty), !.
+isTopRightEmpty(_,_,_, 0). 
+    
+isTopLeftEmpty(Board,Row,Col, 1):-
+    Row =< 4,
+    R is Row - 1,
+    C is Col - 1,
+    validPosition(R, C),
+    getPiece(R,C,Board,empty), !.   
+isTopLeftEmpty(Board,Row,Col, 1):-
+    Row > 4,
+    R is Row - 1,
+    C is Col + 1,
+    validPosition(R, C),
+    getPiece(R,C,Board,empty), !.
+isTopLeftEmpty(_,_,_, 0).
+    
+isBottomRightEmpty(Board,Row,Col, 1):-
+    R is Row + 1,
+    validPosition(R, Col),
+    getPiece(R,Col,Board,empty), !. 
+isBottomRightEmpty(_,_,_, 0).
+
+isBottomLeftEmpty(Board,Row,Col, 1):-
+    Row < 4,
+    R is Row + 1,
+    C is Col + 1,
+    validPosition(R, C),
+    getPiece(R,C,Board,empty), !.
+isBottomLeftEmpty(Board,Row,Col, 1):-
+    Row >= 4,
+    R is Row + 1,
+    C is Col - 1,
+    validPosition(R, C),
+    getPiece(R,C,Board,empty), !. 
+isBottomLeftEmpty(_,_,_, 0).    
