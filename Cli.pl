@@ -9,6 +9,10 @@ board(
 	[empty, empty, empty, [w, 0, 2], empty],
 	[empty, [w, 1, 1], empty, empty] 
 	]).
+
+% player(color, adaptoids, legs, pincers, score)
+player(w, 12, 12, 12, 0).
+player(b, 12, 12, 12, 0).
 		
 		
 testPrintBoard(1) :- board(X), printBoard(X).

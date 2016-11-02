@@ -50,6 +50,13 @@ setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
 	getPincersOfPiece(PieceTo, PincersTo),
 	PincersTo > PincersFrom, 
 	setPiece(RowTo, ColTo, PieceTo, BoardIn, BoardOut).
+	
+setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
+	PieceTo \= empty,
+	getPincersOfPiece(PieceFrom, PincersFrom),
+	getPincersOfPiece(PieceTo, PincersTo),
+	PincersTo =:= PincersFrom, 
+	setPiece(RowTo, ColTo, empty, BoardIn, BoardOut).
 
 getPincersOfPiece([_, _, Pincers], Pincers).
 
@@ -253,93 +260,29 @@ addLeg(Color, Row, Column, BoardIn, BoardOut):-
 
 % Capturar adaptoid's com uma determinada cor.
 %                  +       +        -
-captureAdaptoids(Color, BoardIn, BoardOut):-
-    captureAdaptoidsInRows(Color, BoardIn, BoardOut, 1).
+captureAdaptoids(Color, BoardIn, BoardOut) :-
+	findall([R,C], getPiece(R,C,BoardIn,[Color|_]), Pieces),
+	tryCaptureAPiece(Pieces, BoardIn, BoardOut).
 
-captureAdaptoidsInRows(_, _, [], 8).
-captureAdaptoidsInRows(Color, BoardIn, [RowOut |BoardOut], Row):-
-    captureInRow(Color, BoardIn, Row, 1, RowOut ),
-    R is Row+1,
-    captureAdaptoidsInRows(Color, BoardIn, BoardOut,R).
+tryCaptureAPiece([], Board, Board).
+tryCaptureAPiece([[R,C]|Ps], BoardIn, BoardOut) :-
+	findall([NR,NC], isFreeSpace(R,C,NR,NC,BoardIn), FreeSpacesList),
+	length(FreeSpacesList, NumFreeSpaces),
+	getNumExtremetiesOfAPiece(R,C,BoardIn,Extremeties),
+	captureAdaptoid(R, C, Extremeties, NumFreeSpaces, BoardIn, BoardAux),
+	tryCaptureAPiece(Ps, BoardAux, BoardOut).
+	
+captureAdaptoid(R, C, Extremeties, NumFreeSpaces, BoardIn, BoardOut) :-
+	Extremeties > NumFreeSpaces,
+	setPiece(R, C, empty, BoardIn, BoardOut).
 
-captureInRow(_, _ ,1,5, []).
-captureInRow(_, _ ,2,6, []).
-captureInRow(_, _ ,3,7, []).
-captureInRow(_, _ ,4,8, []).
-captureInRow(_, _ ,5,7, []).
-captureInRow(_, _ ,6,6, []).
-captureInRow(_, _ ,7,5, []).
-captureInRow(Color, Board, Row, Col, [empty |RowOut]):-
-    getPiece(Row,Col,Board, Piece),
-    Piece = [Color, Legs, Pincers],
-    Total is Legs + Pincers,
-    %check how many surronding cells are empty
-    getSurrondingEmptyCells(Board,Row,Col,Num),
-    Num < Total, !,
-    Col1 is Col+1,
-    captureInRow(Color, Board, Row, Col1, RowOut).
-captureInRow(Color, Board, Row, Col, [Piece |RowOut]):-
-    getPiece(Row,Col,Board, Piece),
-    Col1 is Col+1,
-    captureInRow(Color, Board, Row, Col1, RowOut).
-    
-getSurrondingEmptyCells(Board,Row,Col,Num):-
-    isRightEmpty(Board,Row,Col, N1),
-    isLeftEmpty(Board,Row,Col, N2),
-    isTopRightEmpty(Board,Row,Col, N3),
-    isTopLeftEmpty(Board,Row,Col, N4),
-    isBottomRightEmpty(Board,Row,Col, N5),
-    isBottomLeftEmpty(Board,Row,Col, N6),
-    Num is N1 + N2 + N3 + N4 + N5 + N6.
-    
-isRightEmpty(Board,Row,Col, 1):-
-    C is Col + 1,
-    validPosition(Row, C),
-    getPiece(Row,C,Board,empty), !.
-isRightEmpty(_,_,_, 0).
+captureAdaptoid(_, _, Extremeties, NumFreeSpaces, BoardIn, BoardIn) :-
+	Extremeties =< NumFreeSpaces.
 
-isLeftEmpty(Board,Row,Col, 1):-
-    C is Col - 1,
-    validPosition(Row, C),
-    getPiece(Row,C,Board,empty), !.
-isLeftEmpty(_,_,_, 0).
-
-isTopRightEmpty(Board,Row,Col, 1):-
-    R is Row - 1,
-    validPosition(R, Col),
-    getPiece(R,Col,Board,empty), !.
-isTopRightEmpty(_,_,_, 0). 
-    
-isTopLeftEmpty(Board,Row,Col, 1):-
-    Row =< 4,
-    R is Row - 1,
-    C is Col - 1,
-    validPosition(R, C),
-    getPiece(R,C,Board,empty), !.   
-isTopLeftEmpty(Board,Row,Col, 1):-
-    Row > 4,
-    R is Row - 1,
-    C is Col + 1,
-    validPosition(R, C),
-    getPiece(R,C,Board,empty), !.
-isTopLeftEmpty(_,_,_, 0).
-    
-isBottomRightEmpty(Board,Row,Col, 1):-
-    R is Row + 1,
-    validPosition(R, Col),
-    getPiece(R,Col,Board,empty), !. 
-isBottomRightEmpty(_,_,_, 0).
-
-isBottomLeftEmpty(Board,Row,Col, 1):-
-    Row < 4,
-    R is Row + 1,
-    C is Col + 1,
-    validPosition(R, C),
-    getPiece(R,C,Board,empty), !.
-isBottomLeftEmpty(Board,Row,Col, 1):-
-    Row >= 4,
-    R is Row + 1,
-    C is Col - 1,
-    validPosition(R, C),
-    getPiece(R,C,Board,empty), !. 
-isBottomLeftEmpty(_,_,_, 0).    
+getNumExtremetiesOfAPiece(R,C,Board,Extremeties) :-
+	getPiece(R,C,Board,[_,Legs,Pincers]),
+	Extremeties is Legs + Pincers.	
+	
+isFreeSpace(Row, Col, NeighborRow, NeighborCol, Board) :-
+	connected([Row,Col], [NeighborRow, NeighborCol]),
+	getPiece(NeighborRow, NeighborCol, Board, empty).
