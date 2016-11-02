@@ -28,7 +28,7 @@ setPieceInRow(Col, Piece, [R|RowIn], [R|RowOut]):-
 moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut):-
     getPiece(RowFrom, ColFrom, BoardIn, PieceFrom),
     PieceFrom = [Color, Legs, _], !,
-	caminho([RowFrom,ColFrom], [RowTo,ColTo], Legs, BoardIn),
+	thereIsPath([RowFrom,ColFrom], [RowTo,ColTo], Legs, BoardIn),
 	getPiece(RowTo, ColTo, BoardIn, PieceTo),
 	setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardAux),
 	setPiece(RowFrom, ColFrom, empty, BoardAux, BoardOut).
@@ -36,34 +36,20 @@ moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut):-
 setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
 	PieceTo = empty,
 	setPiece(RowTo, ColTo, PieceFrom, BoardIn, BoardOut).
-	
 setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
 	PieceTo \= empty,
 	getPincersOfPiece(PieceFrom, PincersFrom),
 	getPincersOfPiece(PieceTo, PincersTo),
-	PincersFrom > PincersTo, 
-	setPiece(RowTo, ColTo, PieceFrom, BoardIn, BoardOut).
+	(PincersFrom > PincersTo, setPiece(RowTo, ColTo, PieceFrom, BoardIn, BoardOut);
+	PincersTo > PincersFrom, setPiece(RowTo, ColTo, PieceTo, BoardIn, BoardOut);
+	PincersTo =:= PincersFrom, setPiece(RowTo, ColTo, empty, BoardIn, BoardOut)).
 	
-setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
-	PieceTo \= empty,
-	getPincersOfPiece(PieceFrom, PincersFrom),
-	getPincersOfPiece(PieceTo, PincersTo),
-	PincersTo > PincersFrom, 
-	setPiece(RowTo, ColTo, PieceTo, BoardIn, BoardOut).
-	
-setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
-	PieceTo \= empty,
-	getPincersOfPiece(PieceFrom, PincersFrom),
-	getPincersOfPiece(PieceTo, PincersTo),
-	PincersTo =:= PincersFrom, 
-	setPiece(RowTo, ColTo, empty, BoardIn, BoardOut).
-
 getPincersOfPiece([_, _, Pincers], Pincers).
 
 % Se existe um caminho entre 'NoInicio' e 'NoFim' com distancia menor ou igual
 % a 'DistMax', retorna 'yes'.
 % caminho( + NoInicio, + NoFim, - Lista, + DistMax, + Board)
-caminho(NoInicio, NoFim, DistMax, Board) :-
+thereIsPath(NoInicio, NoFim, DistMax, Board) :-
 	getPiece(NoInicio, Board, P1),
 	P1 \= empty,
 	getPiece(NoFim, Board, P2),
@@ -73,13 +59,13 @@ caminho(NoInicio, NoFim, DistMax, Board) :-
 piecesHaveSameColor([Color1|_],[Color2|_]) :-
 	Color1 = Color2.
 
-caminhoAux(NoInicio, NoFim, Lista, ListaFim, N, _) :-
+caminhoAux(NoInicio, NoFim, Lista, ListaFim, N, Board) :-
 	N >= 1,
-	connected(NoInicio, NoFim),
+	connected(NoInicio, NoFim, Board),
 	append(Lista, [NoFim], ListaFim).
 caminhoAux(NoInicio, NoFim, Lista, ListaFim, N, Board):-
 	N > 1,
-	connected(NoInicio, NoInterm),
+	connected(NoInicio, NoInterm, Board),
 	NoInterm \= NoFim,
 	getPiece(NoInterm, Board, Piece),
 	Piece = empty,
@@ -87,98 +73,28 @@ caminhoAux(NoInicio, NoFim, Lista, ListaFim, N, Board):-
 	append(Lista, [NoInterm], Lista2),
 	N2 is N - 1,
 	caminhoAux(NoInterm, NoFim, Lista2, ListaFim, N2, Board).
-
-% Tanto verifica se dois nos sao conexos, como tambem cria conexoes
-connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
-	RowFrom =< 3,
-	RowTo is RowFrom + 1,
-	ColTo is ColFrom,
-	validPosition(RowTo, ColTo).
-connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
-	RowFrom =< 3,
-	RowTo is RowFrom + 1,
-	ColTo is ColFrom + 1,
-	validPosition(RowTo, ColTo).
-connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
-	RowFrom =< 3,
-	RowTo is RowFrom - 1,
-	ColTo is ColFrom - 1,
-	validPosition(RowTo, ColTo).
-connected([RowFrom, ColFrom], [RowTo, ColTo]) :-
-	RowFrom =< 3,
-	RowTo is RowFrom - 1,
-	ColTo is ColFrom,
-	validPosition(RowTo, ColTo).
-connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
-	RowFrom > 4,
-	RowTo is RowFrom + 1,
-	ColTo is ColFrom - 1,
-	validPosition(RowTo, ColTo).
-connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
-	RowFrom > 4,
-	RowTo is RowFrom + 1,
-	ColTo is ColFrom,
-	validPosition(RowTo, ColTo).
-connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
-	RowFrom > 4,
-	RowTo is RowFrom - 1,
-	ColTo is ColFrom,
-	validPosition(RowTo, ColTo).
-connected([RowFrom, ColFrom], [RowTo, ColTo]) :-
-	RowFrom > 4,
-	RowTo is RowFrom - 1,
-	ColTo is ColFrom + 1,
-	validPosition(RowTo, ColTo).
-connected([RowFrom, ColFrom], [RowTo, ColTo]) :-
-	RowFrom =:= 4,
-	RowTo is RowFrom + 1,
-	ColTo is ColFrom - 1,
-	validPosition(RowTo, ColTo).
-connected([RowFrom, ColFrom], [RowTo, ColTo]) :-
-	RowFrom =:= 4,
-	RowTo is RowFrom + 1,
-	ColTo is ColFrom,
-	validPosition(RowTo, ColTo).
-connected([RowFrom, ColFrom], [RowTo, ColTo]) :-
-	RowFrom =:= 4,
-	RowTo is RowFrom - 1,
-	ColTo is ColFrom - 1,
-	validPosition(RowTo, ColTo).
-connected([RowFrom, ColFrom], [RowTo, ColTo]) :-
-	RowFrom =:= 4,
-	RowTo is RowFrom - 1,
-	ColTo is ColFrom,
-	validPosition(RowTo, ColTo).
-connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
-	RowTo is RowFrom,
-	ColTo is ColFrom + 1,
-	validPosition(RowTo, ColTo).
-connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
-	RowTo is RowFrom,
-	ColTo is ColFrom - 1,
-	validPosition(RowTo, ColTo).
 	
-validPosition(1, Col) :-
-	Col =< 4,
-	Col >= 1.
-validPosition(2, Col) :-
-	Col =< 5,
-	Col >= 1.
-validPosition(3, Col) :-
-	Col =< 6,
-	Col >= 1.
-validPosition(4, Col) :-
-	Col =< 7,
-	Col >= 1.
-validPosition(5, Col) :-
-	Col =< 6,
-	Col >= 1.
-validPosition(6, Col) :-
-	Col =< 5,
-	Col >= 1.
-validPosition(7, Col) :-
-	Col =< 4,
-	Col >= 1.
+connected([RowFrom, ColFrom], [RowTo, ColTo], Board) :-
+	logicToCliCoords(RowFrom, ColFrom, RowFC, ColFC),
+	generateEdges(RowFC, ColFC, RowTC, ColTC),
+	cliToLogicCoords(RowTC, ColTC, RowAux, ColAux),
+	RowTo is RowAux, ColTo is ColAux,
+	validPosition(RowTo, ColTo, Board).
+	
+generateEdges(RowFromCli, ColFromCli, RowToCli, ColToCli) :-
+	RowToCli is RowFromCli - 1, ColToCli is ColFromCli - 1.
+generateEdges(RowFromCli, ColFromCli, RowToCli, ColToCli) :-
+	RowToCli is RowFromCli - 1, ColToCli is ColFromCli.
+generateEdges(RowFromCli, ColFromCli, RowToCli, ColToCli) :-
+	RowToCli is RowFromCli, ColToCli is ColFromCli - 1.
+generateEdges(RowFromCli, ColFromCli, RowToCli, ColToCli) :-
+	RowToCli is RowFromCli, ColToCli is ColFromCli + 1.
+generateEdges(RowFromCli, ColFromCli, RowToCli, ColToCli) :-
+	RowToCli is RowFromCli + 1, ColToCli is ColFromCli.
+generateEdges(RowFromCli, ColFromCli, RowToCli, ColToCli) :-
+	RowToCli is RowFromCli + 1, ColToCli is ColFromCli + 1.
+	
+validPosition(R, C, Board) :- getPiece(R, C, Board, _).
 
 % Criar um adaptoid basico de uma cor definida
 %                +     +      +       +        -
@@ -284,5 +200,5 @@ getNumExtremetiesOfAPiece(R,C,Board,Extremeties) :-
 	Extremeties is Legs + Pincers.	
 	
 isFreeSpace(Row, Col, NeighborRow, NeighborCol, Board) :-
-	connected([Row,Col], [NeighborRow, NeighborCol]),
+	connected([Row,Col], [NeighborRow, NeighborCol], Board),
 	getPiece(NeighborRow, NeighborCol, Board, empty).

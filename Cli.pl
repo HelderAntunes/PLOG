@@ -4,9 +4,9 @@ board(
 	[empty, empty, empty, empty], 
 	[[w, 0, 0], empty, empty, empty, empty],
 	[empty, empty, empty, empty, [b, 3, 1], empty],
-	[empty, empty, [b, 0, 6], [w, 0, 2], empty, empty, empty],
+	[empty, empty, [b, 0, 6], [w, 0, 5], empty, empty, empty],
 	[empty, empty, empty, empty, empty, empty],
-	[empty, empty, empty, [w, 0, 2], empty],
+	[empty, empty, empty, [w, 0, 0], empty],
 	[empty, [w, 1, 1], empty, empty] 
 	]).
 
@@ -154,4 +154,19 @@ printBlanckChars(N) :-
 	write(' '), 
 	N1 is N-1, 
 	printBlanckChars(N1).
+	
+% logicToCliCoords(LogicRow, LogicCol, CliRow, CliCol)
+logicToCliCoords(R, C, R, C) :- R =< 4.
+logicToCliCoords(R, C, R, CliC) :-
+	R > 4,
+	CliC is C + R - 4.
+	
+% CliToLogicCoords(CliRow, CliCol, LogicRow, LogicCol)
+cliToLogicCoords(R, C, R, C) :- R =< 4.
+cliToLogicCoords(R, C, R, LogC) :-
+	R > 4,
+	LogC is C - (R - 4).
+
+	
+
 
