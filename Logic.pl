@@ -26,11 +26,32 @@ setPieceInRow(Col, Piece, [R|RowIn], [R|RowOut]):-
 % Mover uma peca no tabuleiro e capturar, se possivel, pecas inimigas
 %                +     +        +      +     +     +        -
 moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut):-
-    getPiece(RowFrom,ColFrom,BoardIn, Piece),
-    Piece = [Color, Legs, _], !,
+    getPiece(RowFrom, ColFrom, BoardIn, PieceFrom),
+    PieceFrom = [Color, Legs, _], !,
 	caminho([RowFrom,ColFrom], [RowTo,ColTo], Legs, BoardIn),
-    setPiece(RowFrom, ColFrom, empty, BoardIn, Board),
-    setPiece(RowTo, ColTo, Piece, Board, BoardOut).
+	getPiece(RowTo, ColTo, BoardIn, PieceTo),
+	setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardAux),
+	setPiece(RowFrom, ColFrom, empty, BoardAux, BoardOut).
+
+setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
+	PieceTo = empty,
+	setPiece(RowTo, ColTo, PieceFrom, BoardIn, BoardOut).
+	
+setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
+	PieceTo \= empty,
+	getPencilsOfPiece(PieceFrom, PencilsFrom),
+	getPencilsOfPiece(PieceTo, PencilsTo),
+	PencilsFrom > PencilsTo, 
+	setPiece(RowTo, ColTo, PieceFrom, BoardIn, BoardOut).
+	
+setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
+	PieceTo \= empty,
+	getPencilsOfPiece(PieceFrom, PencilsFrom),
+	getPencilsOfPiece(PieceTo, PencilsTo),
+	PencilsTo > PencilsFrom, 
+	setPiece(RowTo, ColTo, PieceTo, BoardIn, BoardOut).
+
+getPencilsOfPiece([_, _, Pencils], Pencils).
 
 % Se existe um caminho entre 'NoInicio' e 'NoFim' com distancia menor ou igual
 % a 'DistMax', retorna 'yes'.
