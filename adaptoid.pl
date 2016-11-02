@@ -179,8 +179,133 @@ setPieceInRow(Col, Piece, [R|RowIn], [R|RowOut]):-
 moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut):-
     getPiece(RowFrom,ColFrom,BoardIn, Piece),
     Piece = [Color|_], !,
+    validDestination(Piece,RowFrom,ColFrom,RowTo,ColTo,BoardIn, BoardOut).
+    
+validDestination(Piece,RowFrom,ColFrom,RowTo,ColTo,BoardIn, BoardOut):-
+    getPiece(RowTo,ColTo,BoardIn, OtherPiece),
+    OtherPiece  = empty,
     setPiece(RowFrom, ColFrom, empty, BoardIn, Board),
     setPiece(RowTo, ColTo, Piece, Board, BoardOut).
+    
+validDestination(Piece,RowFrom,ColFrom,RowTo,ColTo,BoardIn, BoardOut):-
+    getPiece(RowTo,ColTo,BoardIn, OtherPiece),
+    Piece = [C1,_,P1],
+    OtherPiece = [C2,_,P2],
+    C1 \= C2,
+    P1 > P2,
+    setPiece(RowFrom, ColFrom, empty, BoardIn, Board),
+    setPiece(RowTo, ColTo, Piece, Board, BoardOut).
+    
+validDestination(Piece,RowFrom,ColFrom,RowTo,ColTo,BoardIn, BoardOut):-
+    getPiece(RowTo,ColTo,BoardIn, OtherPiece),
+    Piece = [C1,_,P1],
+    OtherPiece = [C2,_,P2],
+    C1 \= C2,
+    P1 =:= P2,
+    setPiece(RowFrom, ColFrom, empty, BoardIn, Board),
+    setPiece(RowTo, ColTo, empty, Board, BoardOut).
+
+calcDist(Row,Col,Row,Col, 0).
+calcDist(Row,ColFrom,Row,ColTo, Dist):-
+    ColFrom < ColTo,
+    Col is ColFrom + 1,
+    write(Row), write(' '), write(Col),
+    nl,
+    calcDist(Row, Col, Row, ColTo, D),
+    Dist is D+1.
+calcDist(Row,ColFrom,Row,ColTo, Dist):-
+    ColFrom > ColTo,
+    Col is ColFrom - 1,
+    write(Row), write(' '), write(Col),
+    nl,
+    calcDist(Row, Col, Row, ColTo, D),
+    Dist is D+1.
+    
+calcDist(RowFrom,ColFrom,RowTo,ColTo, Dist):-
+    RowFrom < RowTo,
+    R is RowFrom+1,
+    RowFrom < 4,
+    ColFrom > ColTo,
+    write(R), write(' '), write(ColFrom),
+    nl,
+    calcDist(R, ColFrom, RowTo, ColTo, D),
+    Dist is D+1.
+
+calcDist(RowFrom,ColFrom,RowTo,ColTo, Dist):-
+    RowFrom < RowTo,
+    R is RowFrom+1,
+    RowFrom < 4,
+    ColFrom =< ColTo,
+    Col is ColFrom+1,
+    write(R), write(' '), write(Col),
+    nl,
+    calcDist(R, Col, RowTo, ColTo, D),
+    Dist is D+1.
+    
+calcDist(RowFrom,ColFrom,RowTo,ColTo, Dist):-
+    RowFrom < RowTo,
+    R is RowFrom+1,
+    RowFrom >= 4,
+    ColFrom > ColTo,
+    Col is ColFrom -1,
+    write(R), write(' '), write(Col),
+    nl,
+    calcDist(R, Col, RowTo, ColTo, D),
+    Dist is D+1.
+
+calcDist(RowFrom,ColFrom,RowTo,ColTo, Dist):-
+    RowFrom < RowTo,
+    R is RowFrom+1,
+    RowFrom >= 4,
+    ColFrom < ColTo,
+    write(R), write(' '), write(ColFrom),
+    nl,
+    calcDist(R, ColFrom, RowTo, ColTo, D),
+    Dist is D+1.
+    
+calcDist(RowFrom,ColFrom,RowTo,ColTo, Dist):-
+    RowFrom > RowTo,
+    R is RowFrom-1,
+    RowFrom =< 4,
+    ColFrom > ColTo,
+    Col is Col - 1,
+    write(R), write(' '), write(Col),
+    nl,
+    calcDist(R, Col, RowTo, ColTo, D),
+    Dist is D+1.
+
+calcDist(RowFrom,ColFrom,RowTo,ColTo, Dist):-
+    RowFrom > RowTo,
+    R is RowFrom-1,
+    RowFrom =< 4,
+    ColFrom =< ColTo,
+    write(R), write(' '), write(ColFrom),
+    nl,
+    calcDist(R, ColFrom, RowTo, ColTo, D),
+    Dist is D+1.
+    
+calcDist(RowFrom,ColFrom,RowTo,ColTo, Dist):-
+    RowFrom > RowTo,
+    R is RowFrom-1,
+    RowFrom > 4,
+    ColFrom =< ColTo,
+    write(R), write(' '), write(ColFrom),
+    nl,
+    calcDist(R, ColFrom, RowTo, ColTo, D),
+    Dist is D+1.
+    
+calcDist(RowFrom,ColFrom,RowTo,ColTo, Dist):-
+    RowFrom > RowTo,
+    R is RowFrom-1,
+    RowFrom > 4,
+    ColFrom > ColTo,
+    write(R), write(' '), write(ColFrom),
+    nl,
+    calcDist(R, ColFrom, RowTo, ColTo, D),
+    Dist is D+1.
+
+
+    
 
 % Criar um adaptoid basico de uma cor definida
 %                +     +      +       +        -
