@@ -157,6 +157,7 @@ printBlanckChars(N) :-
 getPiece(Row, Column, Board, Piece):-
 	nth1(Row, Board, R),
 	nth1(Column, R, Piece).
+getPiece([Row,Col], Board, Piece) :- getPiece(Row, Col, Board, Piece).
 
 % Substituir uma casa do tabuleiro (vazia ou preenchida) por uma peca
 %         +      +       +       +       -
@@ -181,6 +182,133 @@ moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut):-
     Piece = [Color|_], !,
     setPiece(RowFrom, ColFrom, empty, BoardIn, Board),
     setPiece(RowTo, ColTo, Piece, Board, BoardOut).
+
+% Se existe um caminho entre 'NoInicio' e 'NoFim' com distancia menor ou igual
+% a 'DistMax', retorna 'yes'.
+% caminho( + NoInicio, + NoFim, - Lista, + DistMax, + Board)
+caminho(NoInicio, NoFim, DistMax, Board) :-
+	getPiece(NoInicio, Board, P1),
+	P1 \= empty,
+	getPiece(NoFim, Board, P2),
+	(P2 = empty; \+ piecesHaveSameColor(P1,P2)), 
+	caminhoAux(NoInicio, NoFim, [NoInicio], _, DistMax, Board).
+
+piecesHaveSameColor([Color1|_],[Color2|_]) :-
+	Color1 = Color2.
+
+caminhoAux(NoInicio, NoFim, Lista, ListaFim, N, _) :-
+	N >= 1,
+	connected(NoInicio, NoFim),
+	append(Lista, [NoFim], ListaFim).
+caminhoAux(NoInicio, NoFim, Lista, ListaFim, N, Board):-
+	N > 1,
+	connected(NoInicio, NoInterm),
+	NoInterm \= NoFim,
+	getPiece(NoInterm, Board, Piece),
+	Piece = empty,
+	\+(member(NoInterm, Lista)),
+	append(Lista, [NoInterm], Lista2),
+	N2 is N - 1,
+	caminhoAux(NoInterm, NoFim, Lista2, ListaFim, N2, Board).
+
+% Tanto verifica se dois nos sao conexos, como tambem cria conexoes
+connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
+	RowFrom =< 3,
+	RowTo is RowFrom + 1,
+	ColTo is ColFrom,
+	validPosition(RowTo, ColTo).
+connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
+	RowFrom =< 3,
+	RowTo is RowFrom + 1,
+	ColTo is ColFrom + 1,
+	validPosition(RowTo, ColTo).
+connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
+	RowFrom =< 3,
+	RowTo is RowFrom - 1,
+	ColTo is ColFrom - 1,
+	validPosition(RowTo, ColTo).
+connected([RowFrom, ColFrom], [RowTo, ColTo]) :-
+	RowFrom =< 3,
+	RowTo is RowFrom - 1,
+	ColTo is ColFrom,
+	validPosition(RowTo, ColTo).
+connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
+	RowFrom > 4,
+	RowTo is RowFrom + 1,
+	ColTo is ColFrom - 1,
+	validPosition(RowTo, ColTo).
+connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
+	RowFrom > 4,
+	RowTo is RowFrom + 1,
+	ColTo is ColFrom,
+	validPosition(RowTo, ColTo).
+connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
+	RowFrom > 4,
+	RowTo is RowFrom - 1,
+	ColTo is ColFrom,
+	validPosition(RowTo, ColTo).
+connected([RowFrom, ColFrom], [RowTo, ColTo]) :-
+	RowFrom > 4,
+	RowTo is RowFrom - 1,
+	ColTo is ColFrom + 1,
+	validPosition(RowTo, ColTo).
+connected([RowFrom, ColFrom], [RowTo, ColTo]) :-
+	RowFrom =:= 4,
+	RowTo is RowFrom + 1,
+	ColTo is ColFrom - 1,
+	validPosition(RowTo, ColTo).
+connected([RowFrom, ColFrom], [RowTo, ColTo]) :-
+	RowFrom =:= 4,
+	RowTo is RowFrom + 1,
+	ColTo is ColFrom,
+	validPosition(RowTo, ColTo).
+connected([RowFrom, ColFrom], [RowTo, ColTo]) :-
+	RowFrom =:= 4,
+	RowTo is RowFrom - 1,
+	ColTo is ColFrom - 1,
+	validPosition(RowTo, ColTo).
+connected([RowFrom, ColFrom], [RowTo, ColTo]) :-
+	RowFrom =:= 4,
+	RowTo is RowFrom - 1,
+	ColTo is ColFrom,
+	validPosition(RowTo, ColTo).
+connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
+	RowTo is RowFrom,
+	ColTo is ColFrom + 1,
+	validPosition(RowTo, ColTo).
+connected([RowFrom, ColFrom], [RowTo, ColTo]) :- 
+	RowTo is RowFrom,
+	ColTo is ColFrom - 1,
+	validPosition(RowTo, ColTo).
+	
+validPosition(Row, Col) :-
+	Row =:= 1,
+	Col =< 4,
+	Col >= 1.
+validPosition(Row, Col) :-
+	Row =:= 2,
+	Col =< 5,
+	Col >= 1.
+validPosition(Row, Col) :-
+	Row =:= 3,
+	Col =< 6,
+	Col >= 1.
+validPosition(Row, Col) :-
+	Row =:= 4,
+	Col =< 7,
+	Col >= 1.
+validPosition(Row, Col) :-
+	Row =:= 5,
+	Col =< 6,
+	Col >= 1.
+validPosition(Row, Col) :-
+	Row =:= 6,
+	Col =< 5,
+	Col >= 1.
+validPosition(Row, Col) :-
+	Row =:= 7,
+	Col =< 4,
+	Col >= 1.
 
 % Criar um adaptoid basico de uma cor definida
 %                +     +      +       +        -
