@@ -179,7 +179,8 @@ setPieceInRow(Col, Piece, [R|RowIn], [R|RowOut]):-
 %                +     +        +      +     +     +        -
 moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut):-
     getPiece(RowFrom,ColFrom,BoardIn, Piece),
-    Piece = [Color|_], !,
+    Piece = [Color, Legs, _], !,
+	caminho([RowFrom,ColFrom], [RowTo,ColTo], Legs, BoardIn),
     setPiece(RowFrom, ColFrom, empty, BoardIn, Board),
     setPiece(RowTo, ColTo, Piece, Board, BoardOut).
 
