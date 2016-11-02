@@ -50,6 +50,13 @@ setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
 	getPencilsOfPiece(PieceTo, PencilsTo),
 	PencilsTo > PencilsFrom, 
 	setPiece(RowTo, ColTo, PieceTo, BoardIn, BoardOut).
+	
+setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
+	PieceTo \= empty,
+	getPencilsOfPiece(PieceFrom, PencilsFrom),
+	getPencilsOfPiece(PieceTo, PencilsTo),
+	PencilsTo =:= PencilsFrom, 
+	setPiece(RowTo, ColTo, empty, BoardIn, BoardOut).
 
 getPencilsOfPiece([_, _, Pencils], Pencils).
 
@@ -260,4 +267,30 @@ addLeg(Color, Row, Column, BoardIn, BoardOut):-
 
 % Capturar adaptoid's com uma determinada cor.
 %                  +       +        -
-captureAdpatoids(Color, BoardIn, BoardOut).
+captureAdaptoids(Color, BoardIn, BoardOut) :-
+	findall([R,C], getPiece(R,C,BoardIn,[Color|_]), Pieces),
+	tryCaptureAPiece(Pieces, BoardIn, BoardOut).
+
+tryCaptureAPiece([], Board, Board).
+tryCaptureAPiece([[R,C]|Ps], BoardIn, BoardOut) :-
+	findall([NR,NC], isFreeSpace(R,C,NR,NC,BoardIn), FreeSpacesList),
+	length(FreeSpacesList, NumFreeSpaces),
+	getNumExtremetiesOfAPiece(R,C,BoardIn,Extremeties),
+	captureAdaptoid(R, C, Extremeties, NumFreeSpaces, BoardIn, BoardAux),
+	tryCaptureAPiece(Ps, BoardAux, BoardOut).
+	
+captureAdaptoid(R, C, Extremeties, NumFreeSpaces, BoardIn, BoardOut) :-
+	Extremeties > NumFreeSpaces,
+	setPiece(R, C, empty, BoardIn, BoardOut).
+
+captureAdaptoid(_, _, Extremeties, NumFreeSpaces, BoardIn, BoardIn) :-
+	Extremeties =< NumFreeSpaces.
+
+getNumExtremetiesOfAPiece(R,C,Board,Extremeties) :-
+	getPiece(R,C,Board,[_,Legs,Pencils]),
+	Extremeties is Legs + Pencils.	
+	
+isFreeSpace(Row, Col, NeighborRow, NeighborCol, Board) :-
+	connected([Row,Col], [NeighborRow, NeighborCol]),
+	getPiece(NeighborRow, NeighborCol, Board, empty).
+	
