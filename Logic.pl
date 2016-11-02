@@ -22,9 +22,9 @@ setPieceInRow(Col, Piece, [R|RowIn], [R|RowOut]):-
 	C1 is Col -1,
 	setPieceInRow(C1, Piece, RowIn, RowOut).
 
-%TODO: Verificar se a peça pode mover-se para as novas coordenadas/registar a captura do inimigo
+%TODO: registar a captura do inimigo
 % Mover uma peca no tabuleiro e capturar, se possivel, pecas inimigas
-%                +     +        +      +     +     +        -
+% moveAndCapture( + Color, + RowFrom, + ColFrom, + RowTo, + ColTo, + BoardIn, + BoardOut)
 moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut):-
     getPiece(RowFrom, ColFrom, BoardIn, PieceFrom),
     PieceFrom = [Color, Legs, _], !,
@@ -97,60 +97,16 @@ generateEdges(RowFromCli, ColFromCli, RowToCli, ColToCli) :-
 validPosition(R, C, Board) :- getPiece(R, C, Board, _).
 
 % Criar um adaptoid basico de uma cor definida
-%                +     +      +       +        -
+% createAdaptoid( + Color, + Row, + Column, + BoardIn, - BoardOut)
 createAdaptoid(Color, Row, Column, BoardIn, BoardOut):-
     getPiece(Row,Column,BoardIn, Piece),
     Piece = empty, !,
-    isValidPosition(Color,Row,Column, BoardIn),
+	neighborValid(Row, Column, _, _, Color, BoardIn),
     setPiece(Row,Column,[Color,0,0],BoardIn,BoardOut).
-    
-isValidPosition(Color, Row, Column, Board):-
-    Col is Column-1,
-    getPiece(Row,Col,Board, Piece),
-    Piece = [Color|_],
-    write('Col-1').
-isValidPosition(Color, Row, Column, Board):-
-    Col is Column+1,
-    getPiece(Row,Col,Board, Piece),
-    Piece = [Color|_],
-    write('Col+1').
-isValidPosition(Color, Row, Column, Board):-
-    R is Row-1,
-    getPiece(R,Column,Board, Piece),
-    Piece = [Color|_],
-    write('Row-1').
-isValidPosition(Color, Row, Column, Board):-
-    Row > 4,
-    R is Row-1,
-    Col is Column+1,
-    getPiece(R,Col,Board, Piece),
-    Piece = [Color|_].
-isValidPosition(Color, Row, Column, Board):-
-    Row =< 4,
-    R is Row-1,
-    Col is Column-1,
-    getPiece(R,Col,Board, Piece),
-    Piece = [Color|_],
-    write('Row-1 Col-1').
-isValidPosition(Color, Row, Column, Board):-
-    R is Row+1,
-    getPiece(R,Column,Board, Piece),
-    Piece = [Color|_],
-    write('Row+1').
-isValidPosition(Color, Row, Column, Board):-
-    Row > 4,
-    R is Row+1,
-    Col is Column-1,
-    getPiece(R,Col,Board, Piece),
-    Piece = [Color|_],
-    write('Row+1 Col-1').
-isValidPosition(Color, Row, Column, Board):-
-    Row =< 4,
-    R is Row+1,
-    Col is Column+1,
-    getPiece(R,Col,Board, Piece),
-    Piece = [Color|_],
-    write('Row+1 Col+1').
+	
+neighborValid(Row, Col, NeighborRow, NeighborCol, Color, Board) :-
+	connected([Row,Col], [NeighborRow, NeighborCol], Board),
+	getPiece(NeighborRow, NeighborCol, Board, [Color|_]).
 
 % Adicionar uma tenaz de uma determinada cor a uma peca do tabuleiro
 %           +     +      +       +        -
@@ -174,8 +130,8 @@ addLeg(Color, Row, Column, BoardIn, BoardOut):-
    P = [Color, L, Pincers],
    setPiece(Row, Column, P, BoardIn, BoardOut).
 
-% Capturar adaptoid's com uma determinada cor.
-%                  +       +        -
+% Capturar adaptoid's com fome de uma determinada cor.
+% captureAdaptoids( + Color, + BoardIn, - BoardOut)
 captureAdaptoids(Color, BoardIn, BoardOut) :-
 	findall([R,C], getPiece(R,C,BoardIn,[Color|_]), Pieces),
 	tryCaptureAPiece(Pieces, BoardIn, BoardOut).
@@ -191,7 +147,6 @@ tryCaptureAPiece([[R,C]|Ps], BoardIn, BoardOut) :-
 captureAdaptoid(R, C, Extremeties, NumFreeSpaces, BoardIn, BoardOut) :-
 	Extremeties > NumFreeSpaces,
 	setPiece(R, C, empty, BoardIn, BoardOut).
-
 captureAdaptoid(_, _, Extremeties, NumFreeSpaces, BoardIn, BoardIn) :-
 	Extremeties =< NumFreeSpaces.
 
