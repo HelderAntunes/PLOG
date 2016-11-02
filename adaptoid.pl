@@ -173,21 +173,92 @@ setPieceInRow(Col, Piece, [R|RowIn], [R|RowOut]):-
 	C1 is Col -1,
 	setPieceInRow(C1, Piece, RowIn, RowOut).
 
+%TODO: Verificar se a peça pode mover-se para as novas coordenadas/registar a captura do inimigo
 % Mover uma peca no tabuleiro e capturar, se possivel, pecas inimigas
 %                +     +        +      +     +     +        -
-moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut).
+moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut):-
+    getPiece(RowFrom,ColFrom,BoardIn, Piece),
+    Piece = [Color|_], !,
+    setPiece(RowFrom, ColFrom, empty, BoardIn, Board),
+    setPiece(RowTo, ColTo, Piece, Board, BoardOut).
 
 % Criar um adaptoid basico de uma cor definida
 %                +     +      +       +        -
-createAdaptoid(Color, Row, Column, BoardIn, BoardOut).
+createAdaptoid(Color, Row, Column, BoardIn, BoardOut):-
+    getPiece(Row,Column,BoardIn, Piece),
+    Piece = empty, !,
+    isValidPosition(Color,Row,Column, BoardIn),
+    setPiece(Row,Column,[Color,0,0],BoardIn,BoardOut).
+    
+isValidPosition(Color, Row, Column, Board):-
+    Col is Column-1,
+    getPiece(Row,Col,Board, Piece),
+    Piece = [Color|_],
+    write('Col-1').
+isValidPosition(Color, Row, Column, Board):-
+    Col is Column+1,
+    getPiece(Row,Col,Board, Piece),
+    Piece = [Color|_],
+    write('Col+1').
+isValidPosition(Color, Row, Column, Board):-
+    R is Row-1,
+    getPiece(R,Column,Board, Piece),
+    Piece = [Color|_],
+    write('Row-1').
+isValidPosition(Color, Row, Column, Board):-
+    Row > 4,
+    R is Row-1,
+    Col is Column+1,
+    getPiece(R,Col,Board, Piece),
+    Piece = [Color|_].
+isValidPosition(Color, Row, Column, Board):-
+    Row =< 4,
+    R is Row-1,
+    Col is Column-1,
+    getPiece(R,Col,Board, Piece),
+    Piece = [Color|_],
+    write('Row-1 Col-1').
+isValidPosition(Color, Row, Column, Board):-
+    R is Row+1,
+    getPiece(R,Column,Board, Piece),
+    Piece = [Color|_],
+    write('Row+1').
+isValidPosition(Color, Row, Column, Board):-
+    Row > 4,
+    R is Row+1,
+    Col is Column-1,
+    getPiece(R,Col,Board, Piece),
+    Piece = [Color|_],
+    write('Row+1 Col-1').
+isValidPosition(Color, Row, Column, Board):-
+    Row =< 4,
+    R is Row+1,
+    Col is Column+1,
+    getPiece(R,Col,Board, Piece),
+    Piece = [Color|_],
+    write('Row+1 Col+1').
 
 % Adicionar uma tenaz de uma determinada cor a uma peca do tabuleiro
 %           +     +      +       +        -
-addPincer(Color, Row, Column, BoardIn, BoardOut).
+addPincer(Color, Row, Column, BoardIn, BoardOut):-
+   getPiece(Row,Column,BoardIn, Piece),
+   Piece = [Color, Legs, Pincers], !,
+   Total is Legs + Pincers + 1,
+   Total < 6, !,
+   P1 is Pincers+1,
+   P = [Color, Legs, P1],
+   setPiece(Row, Column, P, BoardIn, BoardOut).
 
 % Adicionar uma perna de uma determinada cor a uma peca do tabuleiro
 %        +     +      +       +        -
-addLeg(Color, Row, Column, BoardIn, BoardOut).
+addLeg(Color, Row, Column, BoardIn, BoardOut):-
+   getPiece(Row,Column,BoardIn, Piece),
+   Piece = [Color, Legs, Pincers], !, 
+   Total is Legs + Pincers + 1,
+   Total < 6, !,
+   L is Legs+1,
+   P = [Color, L, Pincers],
+   setPiece(Row, Column, P, BoardIn, BoardOut).
 
 % Capturar adaptoid's com uma determinada cor.
 %                  +       +        -
