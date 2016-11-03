@@ -254,7 +254,6 @@ play(hh, b, w):-
     userMoveAndCapture(b, BoardIn, Board1),
     nl,
     write('Enter option (1-create new 2-add pincer 3-add leg): '),
-
     read(Option),
     userCreateOrUpdate(Option, b, Board1, Board2),
     printBoard(Board2),
@@ -271,10 +270,10 @@ userMoveAndCapture(Color, BoardIn, BoardIn):-
 
 userMoveAndCapture(Color, BoardIn, BoardOut):-
     write('Enter Coordinates of adaptoid to move: '),
-    read(UserRowFrom), read(UserColFrom),
+	readCoords(UserRowFrom, UserColFrom), 
     cliToLogicCoords(UserRowFrom, UserColFrom, RowFrom, ColFrom),
     write('Enter Coordinates of destination: '),
-    read(UserRowTo), read(UserColTo),
+	readCoords(UserRowTo, UserColTo), 
     cliToLogicCoords(UserRowTo, UserColTo, RowTo, ColTo),    
     moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut),
     printBoard(BoardOut),
@@ -286,22 +285,26 @@ checkIfNoLegs([L|Legs]):-
     checkIfNoLegs(Legs).
     
 userCreateOrUpdate(1, Color, BoardIn, BoardOut):-
-    write('Enter Coordinates of new adaptoid: '),
-    read(UserRow), read(UserCol),
+    write('Enter Coordinates of new adaptoid: '), nl,
+	readCoords(UserRow, UserCol), 
     cliToLogicCoords(UserRow, UserCol, Row, Col),
     createAdaptoid(Color, Row, Col, BoardIn, BoardOut).
     
 userCreateOrUpdate(2, Color, BoardIn, BoardOut):-
-    write('Enter Coordinates of adaptoid: '),
-    read(UserRow), read(UserCol),
+    write('Enter Coordinates of adaptoid: '), nl, 
+    readCoords(UserRow, UserCol), 
     cliToLogicCoords(UserRow, UserCol, Row, Col),
     addPincer(Color, Row, Col, BoardIn, BoardOut).
     
 userCreateOrUpdate(3, Color, BoardIn, BoardOut):-
-    write('Enter Coordinates of adaptoid: '),
-    read(UserRow), read(UserCol),
+    write('Enter Coordinates of adaptoid: '), nl, 
+    readCoords(UserRow, UserCol), 
     cliToLogicCoords(UserRow, UserCol, Row, Col),
     addLeg(Color, Row, Col, BoardIn, BoardOut).
+	
+readCoords(Row, Col) :-  
+	write('Row '), read(Row), 
+	write('Col '), read(Col).
 	
 
 
