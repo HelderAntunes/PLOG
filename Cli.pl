@@ -3,14 +3,13 @@
 board(
 	[
 	[empty, empty, empty, empty], 
-	[[w, 0, 0], empty, empty, empty, empty],
-	[empty, empty, empty, empty, [b, 3, 1], empty],
-	[empty, empty, [b, 0, 6], [w, 0, 5], empty, empty, empty],
+	[empty, empty, empty, empty, empty],
 	[empty, empty, empty, empty, empty, empty],
-	[empty, empty, empty, [w, 0, 0], empty],
-	[empty, [w, 1, 1], empty, empty] 
+	[empty, [w, 0, 0], empty, empty, empty, [b, 0, 0], empty],
+	[empty, empty, empty, empty, empty, empty],
+	[empty, empty, empty, empty, empty],
+	[empty, empty, empty, empty] 
 	]).
-
 % player(color, adaptoids, legs, pincers, score)
 player(w, 12, 12, 12, 0).
 player(b, 12, 12, 12, 0).
@@ -168,7 +167,21 @@ cliToLogicCoords(R, C, R, LogC) :-
 	R > 4,
 	LogC is C - (R - 4).
     
-testEnd :- fail.
+testEnd :- 
+    player(w, _, _, _, Score),
+    Score > 4.
+testEnd :- 
+    player(b, _, _, _, Score),
+    Score > 4.
+testEnd:-
+    board(Board),
+    findall([R,C], getPiece(R,C,Board,[w|_]), Pieces),
+    Pieces = [].
+testEnd:-
+    board(Board),
+    findall([R,C], getPiece(R,C,Board,[b|_]), Pieces),
+    Pieces = [].
+    
 showResults:- 
     player(w, _, _, _, WhiteScore),
     player(b, _, _, _, BlackScore),
@@ -181,8 +194,13 @@ writeWhoWon(WhiteScore,BlackScore):-
 writeWhoWon(WhiteScore,BlackScore):-
     WhiteScore < BlackScore, !,
     write('Black won!!!'), nl .
+%If captures are equal the last to move wins
 writeWhoWon(_,_):-
-    write('Its a tie!!!'), nl .  
+    turnColor(b),
+    write('White won!!!'), nl .
+writeWhoWon(_,_):-
+    turnColor(w),
+    write('Black won!!!'), nl .  
     
 % game(Type)
 game(Type):-
