@@ -169,7 +169,20 @@ cliToLogicCoords(R, C, R, LogC) :-
 	LogC is C - (R - 4).
     
 testEnd :- fail.
-showResults.
+showResults:- 
+    player(w, _, _, _, WhiteScore),
+    player(b, _, _, _, BlackScore),
+    write('White '), write(WhiteScore), write(' - '), write(BlackScore), write(' Black'), nl,
+    writeWhoWon(WhiteScore,BlackScore).
+    
+writeWhoWon(WhiteScore,BlackScore):-
+    WhiteScore > BlackScore, !,
+    write('White won!!!'), nl .
+writeWhoWon(WhiteScore,BlackScore):-
+    WhiteScore < BlackScore, !,
+    write('Black won!!!'), nl .
+writeWhoWon(_,_):-
+    write('Its a tie!!!'), nl .  
     
 % game(Type)
 game(Type):-
