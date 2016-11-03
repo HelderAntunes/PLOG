@@ -38,13 +38,24 @@ setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
 	setPiece(RowTo, ColTo, PieceFrom, BoardIn, BoardOut).
 setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
 	PieceTo \= empty,
-	getPincersOfPiece(PieceFrom, PincersFrom),
-	getPincersOfPiece(PieceTo, PincersTo),
-	(PincersFrom > PincersTo, setPiece(RowTo, ColTo, PieceFrom, BoardIn, BoardOut);
-	PincersTo > PincersFrom, setPiece(RowTo, ColTo, PieceTo, BoardIn, BoardOut);
-	PincersTo =:= PincersFrom, setPiece(RowTo, ColTo, empty, BoardIn, BoardOut)).
+	getPincersOfPiece(PieceFrom, PincersFrom), getPincersOfPiece(PieceTo, PincersTo),
+	getColorOfPiece(PieceFrom, ColorFrom), getColorOfPiece(PieceTo, ColorTo),
+	(PincersFrom > PincersTo, setPiece(RowTo, ColTo, PieceFrom, BoardIn, BoardOut),
+	updateScoreOfPlayer(ColorFrom, 1);
+	PincersTo > PincersFrom, setPiece(RowTo, ColTo, PieceTo, BoardIn, BoardOut),
+	updateScoreOfPlayer(ColorTo, 1);
+	PincersTo =:= PincersFrom, setPiece(RowTo, ColTo, empty, BoardIn, BoardOut),
+	updateScoreOfPlayer(ColorFrom, 1), updateScoreOfPlayer(ColorTo, 1)).
 	
 getPincersOfPiece([_, _, Pincers], Pincers).
+
+getColorOfPiece([Color|_], Color).
+
+updateScoreOfPlayer(Color, PointsToSum) :-
+	player(Color, Adaptoids, Legs, Pincers, Score),
+	NewScore is Score + PointsToSum,
+	retract(player(Color, Adaptoids, Legs, Pincers, Score)),
+	assert(player(Color, Adaptoids, Legs, Pincers, NewScore)).
 
 % Se existe um caminho entre 'NoInicio' e 'NoFim' com distancia menor ou igual
 % a 'DistMax', retorna 'yes'.
@@ -146,6 +157,10 @@ tryCaptureAPiece([[R,C]|Ps], BoardIn, BoardOut) :-
 	
 captureAdaptoid(R, C, Extremeties, NumFreeSpaces, BoardIn, BoardOut) :-
 	Extremeties > NumFreeSpaces,
+	getPiece(R, C, BoardIn, Piece),
+	getColorOfPiece(Piece, Color),
+	getColorOfEnemy(Color, ColorEnemy),
+	updateScoreOfPlayer(ColorEnemy, 1),
 	setPiece(R, C, empty, BoardIn, BoardOut).
 captureAdaptoid(_, _, Extremeties, NumFreeSpaces, BoardIn, BoardIn) :-
 	Extremeties =< NumFreeSpaces.
@@ -157,3 +172,6 @@ getNumExtremetiesOfAPiece(R,C,Board,Extremeties) :-
 isFreeSpace(Row, Col, NeighborRow, NeighborCol, Board) :-
 	connected([Row,Col], [NeighborRow, NeighborCol], Board),
 	getPiece(NeighborRow, NeighborCol, Board, empty).
+	
+getColorOfEnemy(w, b).
+getColorOfEnemy(b, w).

@@ -1,5 +1,7 @@
 :- dynamic board/1.
 :- dynamic turnColor/1.
+:- dynamic player/5.
+
 board(
 	[
 	[empty, empty, empty, empty], 
