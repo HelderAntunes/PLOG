@@ -156,18 +156,16 @@ cliToLogicCoords(R, C, R, LogC) :-
 	R > 4,
 	LogC is C - (R - 4).
     
-testEnd :- 
+testEnd(_) :- 
     player(w, _, _, _, Score),
     Score > 4.
-testEnd :- 
+testEnd(_) :- 
     player(b, _, _, _, Score),
     Score > 4.
-testEnd:-
-    board(Board),
+testEnd(Board) :-
     findall([R,C], getPiece(R,C,Board,[w|_]), Pieces),
     Pieces = [].
-testEnd:-
-    board(Board),
+testEnd(Board) :-
     findall([R,C], getPiece(R,C,Board,[b|_]), Pieces),
     Pieces = [].
     
@@ -194,16 +192,8 @@ writeWhoWon(_,_):-
 % game(Type)
 game(Type):-
     %inicializações
-    assert(board(
-        [
-        [empty, empty, empty, empty], 
-        [empty, empty, empty, empty, empty],
-        [empty, empty, empty, empty, empty, empty],
-        [empty, [w, 0, 0], empty, empty, empty, [b, 0, 0], empty],
-        [empty, empty, empty, empty, empty, empty],
-        [empty, empty, empty, empty, empty],
-        [empty, empty, empty, empty] 
-        ])),
+	boardToTestEndGame(B), 
+    assert(board(B)),
     % player(color, adaptoids, legs, pincers, score)
     assert(player(w, 12, 12, 12, 0)),
     assert(player(b, 12, 12, 12, 0)),
@@ -214,7 +204,8 @@ game(Type):-
         once(play(Type, ColorIn, ColorOut)),
         retract(turnColor(ColorIn)),
         assert(turnColor(ColorOut)),
-        testEnd,
+		board(B),
+        testEnd(B),
     showResults,
     retract(board(_)),
     retract(player(w,_,_,_,_)),
@@ -223,7 +214,6 @@ game(Type):-
 % joga(Type, ColorIn, ColorOut)
 play(hh, w, b):-
     board(BoardIn),
-    player(w, Adaptoids, Legs, Pincers, Score),
     %jogada
     nl,
     write('White playing'),
@@ -231,20 +221,18 @@ play(hh, w, b):-
     printBoard(BoardIn),
     nl,
     userMoveAndCapture(w, BoardIn, Board1),
+	(testEnd(Board1), retract(board(BoardIn)), assert(board(Board1));
     nl,
     write('Enter option (1-create new 2-add pincer 3-add leg): '),
     read(Option),
     userCreateOrUpdate(Option, w, Board1, Board2),
-    printBoard(Board2),
-    nl,
     captureAdaptoids(b, Board2, BoardOut),
     %Update board
     retract(board(BoardIn)),
-    assert(board(BoardOut)).
+    assert(board(BoardOut))).
    
 play(hh, b, w):-
     board(BoardIn),
-    player(w, Adaptoids, Legs, Pincers, Score),
     %jogada
     nl,
     write('Black playing'),
@@ -252,16 +240,15 @@ play(hh, b, w):-
     printBoard(BoardIn),
     nl,
     userMoveAndCapture(b, BoardIn, Board1),
+	(testEnd(Board1), retract(board(BoardIn)), assert(board(Board1));
     nl,
     write('Enter option (1-create new 2-add pincer 3-add leg): '),
     read(Option),
     userCreateOrUpdate(Option, b, Board1, Board2),
-    printBoard(Board2),
-    nl,
     captureAdaptoids(w, Board2, BoardOut),
     %Update board
     retract(board(BoardIn)),
-    assert(board(BoardOut)).
+    assert(board(BoardOut))).
     
 userMoveAndCapture(Color, BoardIn, BoardIn):-
     findall(Legs, getPiece(_R,_C,BoardIn,[Color,Legs,_]), Pieces),
@@ -269,10 +256,10 @@ userMoveAndCapture(Color, BoardIn, BoardIn):-
     
 
 userMoveAndCapture(Color, BoardIn, BoardOut):-
-    write('Enter Coordinates of adaptoid to move: '),
+    write('Enter Coordinates of adaptoid to move: '), nl, 
 	readCoords(UserRowFrom, UserColFrom), 
     cliToLogicCoords(UserRowFrom, UserColFrom, RowFrom, ColFrom),
-    write('Enter Coordinates of destination: '),
+    write('Enter Coordinates of destination: '), nl, 
 	readCoords(UserRowTo, UserColTo), 
     cliToLogicCoords(UserRowTo, UserColTo, RowTo, ColTo),    
     moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut),

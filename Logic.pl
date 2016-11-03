@@ -125,7 +125,7 @@ addPincer(Color, Row, Column, BoardIn, BoardOut):-
    getPiece(Row,Column,BoardIn, Piece),
    Piece = [Color, Legs, Pincers], !,
    Total is Legs + Pincers + 1,
-   Total < 6, !,
+   Total =< 6, !,
    P1 is Pincers+1,
    P = [Color, Legs, P1],
    setPiece(Row, Column, P, BoardIn, BoardOut).
@@ -136,7 +136,7 @@ addLeg(Color, Row, Column, BoardIn, BoardOut):-
    getPiece(Row,Column,BoardIn, Piece),
    Piece = [Color, Legs, Pincers], !, 
    Total is Legs + Pincers + 1,
-   Total < 6, !,
+   Total =< 6, !,
    L is Legs+1,
    P = [Color, L, Pincers],
    setPiece(Row, Column, P, BoardIn, BoardOut).
