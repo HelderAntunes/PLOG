@@ -215,7 +215,10 @@ game(Type):-
         retract(turnColor(ColorIn)),
         assert(turnColor(ColorOut)),
         testEnd,
-    showResults.
+    showResults,
+    retract(board(_)),
+    retract(player(w,_,_,_,_)),
+    retract(player(b,_,_,_,_)).
 
 % joga(Type, ColorIn, ColorOut)
 play(hh, w, b):-
