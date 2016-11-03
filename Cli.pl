@@ -1,8 +1,6 @@
 :- dynamic board/1.
 :- dynamic turnColor/1.
 :- dynamic player/5.
-
-		
 		
 testPrintBoard(1) :- board(X), printBoard(X).
 
@@ -167,7 +165,7 @@ testEnd(Board) :-
     Pieces = [].
 testEnd(Board) :-
     findall([R,C], getPiece(R,C,Board,[b|_]), Pieces),
-    Pieces = [].
+	Pieces = [].
     
 showResults:- 
     player(w, _, _, _, WhiteScore),
@@ -192,8 +190,8 @@ writeWhoWon(_,_):-
 % game(Type)
 game(Type):-
     %inicializações
-	boardToTestEndGame(B), 
-    assert(board(B)),
+	boardToTestEndGame(InitBoard), 
+    assert(board(InitBoard)),
     % player(color, adaptoids, legs, pincers, score)
     assert(player(w, 12, 12, 12, 0)),
     assert(player(b, 12, 12, 12, 0)),
@@ -203,7 +201,7 @@ game(Type):-
         turnColor(ColorIn),
         once(play(Type, ColorIn, ColorOut)),
         retract(turnColor(ColorIn)),
-        assert(turnColor(ColorOut)),
+        assert(turnColor(ColorOut)), 
 		board(B),
         testEnd(B),
     showResults,
@@ -220,7 +218,7 @@ play(hh, w, b):-
     nl,
     printBoard(BoardIn),
     nl,
-    userMoveAndCapture(w, BoardIn, Board1),
+    userMoveAndCapture(w, BoardIn, Board1), 
 	(testEnd(Board1), retract(board(BoardIn)), assert(board(Board1));
     nl,
     write('Enter option (1-create new 2-add pincer 3-add leg): '),
