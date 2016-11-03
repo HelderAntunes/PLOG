@@ -228,9 +228,8 @@ play(hh, w, b):-
     printBoard(BoardIn),
     nl,
     userMoveAndCapture(w, BoardIn, Board1),
-    printBoard(Board1),
     nl,
-    write('Enter option: 1-create new 2-add pincer 3-add leg'),
+    write('Enter option (1-create new 2-add pincer 3-add leg): '),
     read(Option),
     userCreateOrUpdate(Option, w, Board1, Board2),
     printBoard(Board2),
@@ -250,9 +249,8 @@ play(hh, b, w):-
     printBoard(BoardIn),
     nl,
     userMoveAndCapture(b, BoardIn, Board1),
-    printBoard(Board1),
     nl,
-    write('Enter option: 1-create new 2-add pincer 3-add leg'),
+    write('Enter option (1-create new 2-add pincer 3-add leg): '),
     read(Option),
     userCreateOrUpdate(Option, b, Board1, Board2),
     printBoard(Board2),
@@ -274,7 +272,8 @@ userMoveAndCapture(Color, BoardIn, BoardOut):-
     write('Enter Coordinates of destination: '),
     read(UserRowTo), read(UserColTo),
     cliToLogicCoords(UserRowTo, UserColTo, RowTo, ColTo),    
-    moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut).
+    moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut),
+	printBoard(BoardOut).
 
 checkIfNoLegs([]).    
 checkIfNoLegs([L|Legs]):-
