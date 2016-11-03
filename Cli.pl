@@ -263,7 +263,7 @@ play(hh, b, w):-
     assert(board(BoardOut)).
     
 userMoveAndCapture(Color, BoardIn, BoardIn):-
-    findall(Legs, getPiece(_R,_C,BoardIn,[Color|_]), Pieces),
+    findall(Legs, getPiece(_R,_C,BoardIn,[Color,Legs,_]), Pieces),
     checkIfNoLegs(Pieces).
     
 
