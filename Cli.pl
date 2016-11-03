@@ -2,19 +2,6 @@
 :- dynamic turnColor/1.
 :- dynamic player/5.
 
-board(
-	[
-	[empty, empty, empty, empty], 
-	[empty, empty, empty, empty, empty],
-	[empty, empty, empty, empty, empty, empty],
-	[empty, [w, 0, 0], empty, empty, empty, [b, 0, 0], empty],
-	[empty, empty, empty, empty, empty, empty],
-	[empty, empty, empty, empty, empty],
-	[empty, empty, empty, empty] 
-	]).
-% player(color, adaptoids, legs, pincers, score)
-player(w, 12, 12, 12, 0).
-player(b, 12, 12, 12, 0).
 		
 		
 testPrintBoard(1) :- board(X), printBoard(X).
@@ -207,6 +194,19 @@ writeWhoWon(_,_):-
 % game(Type)
 game(Type):-
     %inicializações
+    assert(board(
+        [
+        [empty, empty, empty, empty], 
+        [empty, empty, empty, empty, empty],
+        [empty, empty, empty, empty, empty, empty],
+        [empty, [w, 0, 0], empty, empty, empty, [b, 0, 0], empty],
+        [empty, empty, empty, empty, empty, empty],
+        [empty, empty, empty, empty, empty],
+        [empty, empty, empty, empty] 
+        ])),
+    % player(color, adaptoids, legs, pincers, score)
+    assert(player(w, 12, 12, 12, 0)),
+    assert(player(b, 12, 12, 12, 0)),
     assert(turnColor(w)),
     %ciclo de jogo
     repeat,
@@ -228,8 +228,6 @@ play(hh, w, b):-
     printBoard(BoardIn),
     nl,
     userMoveAndCapture(w, BoardIn, Board1),
-    printBoard(Board1),
-    nl,
     write('Enter option: 1-create new 2-add pincer 3-add leg'),
     read(Option),
     userCreateOrUpdate(Option, w, Board1, Board2),
@@ -250,8 +248,6 @@ play(hh, b, w):-
     printBoard(BoardIn),
     nl,
     userMoveAndCapture(b, BoardIn, Board1),
-    printBoard(Board1),
-    nl,
     write('Enter option: 1-create new 2-add pincer 3-add leg'),
     read(Option),
     userCreateOrUpdate(Option, b, Board1, Board2),
@@ -274,7 +270,9 @@ userMoveAndCapture(Color, BoardIn, BoardOut):-
     write('Enter Coordinates of destination: '),
     read(UserRowTo), read(UserColTo),
     cliToLogicCoords(UserRowTo, UserColTo, RowTo, ColTo),    
-    moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut).
+    moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut),
+    printBoard(BoardOut),
+    nl.
 
 checkIfNoLegs([]).    
 checkIfNoLegs([L|Legs]):-
