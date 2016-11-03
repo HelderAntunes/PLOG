@@ -231,7 +231,8 @@ play(hh, w, b):-
     printBoard(BoardIn),
     nl,
     userMoveAndCapture(w, BoardIn, Board1),
-    write('Enter option: 1-create new 2-add pincer 3-add leg'),
+    nl,
+    write('Enter option (1-create new 2-add pincer 3-add leg): '),
     read(Option),
     userCreateOrUpdate(Option, w, Board1, Board2),
     printBoard(Board2),
@@ -251,7 +252,9 @@ play(hh, b, w):-
     printBoard(BoardIn),
     nl,
     userMoveAndCapture(b, BoardIn, Board1),
-    write('Enter option: 1-create new 2-add pincer 3-add leg'),
+    nl,
+    write('Enter option (1-create new 2-add pincer 3-add leg): '),
+
     read(Option),
     userCreateOrUpdate(Option, b, Board1, Board2),
     printBoard(Board2),
@@ -263,7 +266,7 @@ play(hh, b, w):-
     
 userMoveAndCapture(Color, BoardIn, BoardIn):-
     findall(Legs, getPiece(_R,_C,BoardIn,[Color,Legs,_]), Pieces),
-    checkIfNoLegs(Pieces).
+    checkIfNoLegs(Pieces), !.
     
 
 userMoveAndCapture(Color, BoardIn, BoardOut):-
