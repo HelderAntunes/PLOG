@@ -1,4 +1,5 @@
-
+:- dynamic board/1.
+:- dynamic turnColor/1.
 board(
 	[
 	[empty, empty, empty, empty], 
@@ -166,7 +167,94 @@ cliToLogicCoords(R, C, R, C) :- R =< 4.
 cliToLogicCoords(R, C, R, LogC) :-
 	R > 4,
 	LogC is C - (R - 4).
+    
+testEnd :- fail.
+showResults.
+    
+% game(Type)
+game(Type):-
+    %inicializações
+    assert(turnColor(w)),
+    %ciclo de jogo
+    repeat,
+        turnColor(ColorIn),
+        once(play(Type, ColorIn, ColorOut)),
+        retract(turnColor(ColorIn)),
+        assert(turnColor(ColorOut)),
+        testEnd,
+    showResults.
 
+% joga(Type, ColorIn, ColorOut)
+play(hh, w, b):-
+    board(BoardIn),
+    player(w, Adaptoids, Legs, Pincers, Score),
+    %jogada
+    nl,
+    write('White playing'),
+    nl,
+    printBoard(BoardIn),
+    nl,
+    userMoveAndCapture(w, BoardIn, Board1),
+    printBoard(Board1),
+    nl,
+    write('Enter option: 1-create new 2-add pincer 3-add leg'),
+    read(Option),
+    userCreateOrUpdate(Option, w, Board1, Board2),
+    printBoard(Board2),
+    nl,
+    captureAdaptoids(b, Board2, BoardOut),
+    %Update board
+    retract(board(BoardIn)),
+    assert(board(BoardOut)).
+   
+play(hh, b, w):-
+    board(BoardIn),
+    player(w, Adaptoids, Legs, Pincers, Score),
+    %jogada
+    nl,
+    write('Black playing'),
+    nl,
+    printBoard(BoardIn),
+    nl,
+    userMoveAndCapture(b, BoardIn, Board1),
+    printBoard(Board1),
+    nl,
+    write('Enter option: 1-create new 2-add pincer 3-add leg'),
+    read(Option),
+    userCreateOrUpdate(Option, b, Board1, Board2),
+    printBoard(Board2),
+    nl,
+    captureAdaptoids(w, Board2, BoardOut),
+    %Update board
+    retract(board(BoardIn)),
+    assert(board(BoardOut)).
+
+userMoveAndCapture(Color, BoardIn, BoardOut):-
+    write('Enter Coordinates of adaptoid to move: '),
+    read(UserRowFrom), read(UserColFrom),
+    cliToLogicCoords(UserRowFrom, UserColFrom, RowFrom, ColFrom),
+    write('Enter Coordinates of destination: '),
+    read(UserRowTo), read(UserColTo),
+    cliToLogicCoords(UserRowTo, UserColTo, RowTo, ColTo),    
+    moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut).
+    
+userCreateOrUpdate(1, Color, BoardIn, BoardOut):-
+    write('Enter Coordinates of new adaptoid: '),
+    read(UserRow), read(UserCol),
+    cliToLogicCoords(UserRow, UserCol, Row, Col),
+    createAdaptoid(Color, Row, Col, BoardIn, BoardOut).
+    
+userCreateOrUpdate(2, Color, BoardIn, BoardOut):-
+    write('Enter Coordinates of adaptoid: '),
+    read(UserRow), read(UserCol),
+    cliToLogicCoords(UserRow, UserCol, Row, Col),
+    addPincer(Color, Row, Col, BoardIn, BoardOut).
+    
+userCreateOrUpdate(3, Color, BoardIn, BoardOut):-
+    write('Enter Coordinates of adaptoid: '),
+    read(UserRow), read(UserCol),
+    cliToLogicCoords(UserRow, UserCol, Row, Col),
+    addLeg(Color, Row, Col, BoardIn, BoardOut).
 	
 
 
