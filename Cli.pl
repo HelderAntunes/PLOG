@@ -261,6 +261,11 @@ play(hh, b, w):-
     %Update board
     retract(board(BoardIn)),
     assert(board(BoardOut)).
+    
+userMoveAndCapture(Color, BoardIn, BoardIn):-
+    findall(Legs, getPiece(_R,_C,BoardIn,[Color|_]), Pieces),
+    checkIfNoLegs(Pieces).
+    
 
 userMoveAndCapture(Color, BoardIn, BoardOut):-
     write('Enter Coordinates of adaptoid to move: '),
@@ -270,6 +275,11 @@ userMoveAndCapture(Color, BoardIn, BoardOut):-
     read(UserRowTo), read(UserColTo),
     cliToLogicCoords(UserRowTo, UserColTo, RowTo, ColTo),    
     moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut).
+
+checkIfNoLegs([]).    
+checkIfNoLegs([L|Legs]):-
+    L is 0,
+    checkIfNoLegs(Legs).
     
 userCreateOrUpdate(1, Color, BoardIn, BoardOut):-
     write('Enter Coordinates of new adaptoid: '),
