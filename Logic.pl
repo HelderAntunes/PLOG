@@ -41,11 +41,12 @@ setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
 	getPincersOfPiece(PieceFrom, PincersFrom), getPincersOfPiece(PieceTo, PincersTo),
 	getColorOfPiece(PieceFrom, ColorFrom), getColorOfPiece(PieceTo, ColorTo),
 	(PincersFrom > PincersTo, setPiece(RowTo, ColTo, PieceFrom, BoardIn, BoardOut),
-	updateScoreOfPlayer(ColorFrom, 1);
+	updateScoreOfPlayer(ColorFrom, 1), updatePiecesOfPlayer(ColorFrom, PieceTo);
 	PincersTo > PincersFrom, setPiece(RowTo, ColTo, PieceTo, BoardIn, BoardOut),
-	updateScoreOfPlayer(ColorTo, 1);
+	updateScoreOfPlayer(ColorTo, 1), updatePiecesOfPlayer(ColorTo, PieceFrom);
 	PincersTo =:= PincersFrom, setPiece(RowTo, ColTo, empty, BoardIn, BoardOut),
-	updateScoreOfPlayer(ColorFrom, 1), updateScoreOfPlayer(ColorTo, 1)).
+	updateScoreOfPlayer(ColorFrom, 1), updateScoreOfPlayer(ColorTo, 1), 
+	updatePiecesOfPlayer(ColorFrom, PieceTo), updatePiecesOfPlayer(ColorTo, PieceFrom)).
 	
 getPincersOfPiece([_, _, Pincers], Pincers).
 
@@ -56,7 +57,15 @@ updateScoreOfPlayer(Color, PointsToSum) :-
 	NewScore is Score + PointsToSum,
 	retract(player(Color, Adaptoids, Legs, Pincers, Score)),
 	assert(player(Color, Adaptoids, Legs, Pincers, NewScore)).
-
+	
+updatePiecesOfPlayer(Color, [_, LegsToAdd, PincersToAdd]) :-
+	player(Color, Adaptoids, Legs, Pincers, Score),
+	NewAdaptoids is Adaptoids + 1,
+	NewLegs is Legs + LegsToAdd, 
+	NewPincers is Pincers + PincersToAdd,
+	retract(player(Color, Adaptoids, Legs, Pincers, Score)),
+	assert(player(Color, NewAdaptoids, NewLegs, NewPincers, Score)).
+	
 % Se existe um caminho entre 'NoInicio' e 'NoFim' com distancia menor ou igual
 % a 'DistMax', retorna 'yes'.
 % caminho( + NoInicio, + NoFim, - Lista, + DistMax, + Board)
@@ -161,6 +170,7 @@ captureAdaptoid(R, C, Extremeties, NumFreeSpaces, BoardIn, BoardOut) :-
 	getColorOfPiece(Piece, Color),
 	getColorOfEnemy(Color, ColorEnemy),
 	updateScoreOfPlayer(ColorEnemy, 1),
+	updatePiecesOfPlayer(ColorEnemy, Piece),
 	setPiece(R, C, empty, BoardIn, BoardOut).
 captureAdaptoid(_, _, Extremeties, NumFreeSpaces, BoardIn, BoardIn) :-
 	Extremeties =< NumFreeSpaces.

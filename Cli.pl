@@ -190,7 +190,7 @@ writeWhoWon(_,_):-
 % game(Type)
 game(Type):-
     %inicializações
-	boardToTestEndGame(InitBoard), 
+	boardToTestCaptureHungryAdaptoids(InitBoard), 
     assert(board(InitBoard)),
     % player(color, adaptoids, legs, pincers, score)
     assert(player(w, 12, 12, 12, 0)),
@@ -207,15 +207,16 @@ game(Type):-
     showResults,
     retract(board(_)),
     retract(player(w,_,_,_,_)),
-    retract(player(b,_,_,_,_)).
+    retract(player(b,_,_,_,_)), 
+	retract(turnColor(_)).
 
 % joga(Type, ColorIn, ColorOut)
 play(hh, w, b):-
     board(BoardIn),
     %jogada
-    nl,
-    write('White playing'),
-    nl,
+	showScores, nl,
+	showMaterialOfPlayers, nl,
+    write('White playing'), nl,
     printBoard(BoardIn),
     nl,
     userMoveAndCapture(w, BoardIn, Board1), 
@@ -224,7 +225,7 @@ play(hh, w, b):-
     write('Enter option (1-create new 2-add pincer 3-add leg): '),
     read(Option),
     userCreateOrUpdate(Option, w, Board1, Board2),
-    captureAdaptoids(b, Board2, BoardOut),
+    captureAdaptoids(b, Board2, BoardOut),  
     %Update board
     retract(board(BoardIn)),
     assert(board(BoardOut))).
@@ -232,9 +233,9 @@ play(hh, w, b):-
 play(hh, b, w):-
     board(BoardIn),
     %jogada
-    nl,
-    write('Black playing'),
-    nl,
+	showScores, nl,
+	showMaterialOfPlayers, nl,
+    write('Black playing'), nl, 
     printBoard(BoardIn),
     nl,
     userMoveAndCapture(b, BoardIn, Board1),
@@ -291,5 +292,17 @@ readCoords(Row, Col) :-
 	write('Row '), read(Row), 
 	write('Col '), read(Col).
 	
-
+showMaterialOfPlayers :-
+	player(w, Adaptoids, Legs, Pincers, _),
+	player(b, Adaptoids2, Legs2, Pincers2, _),
+	write('MATERIAL (WHITE - BLACK)'), nl,
+	write('Adaptoids: ('), write(Adaptoids), write(' - '), write(Adaptoids2), write(')'), nl,
+	write('Legs: ('), write(Legs), write(' - '), write(Legs2), write(')'), nl,
+	write('Pincers: ('), write(Pincers), write(' - '), write(Pincers2), write(')'), nl.
+	
+showScores :-
+	player(w, _, _, _, ScoreWhite),
+	player(b, _, _, _, ScoreBlack),
+	write('SCORES   '),  write('White: '), write(ScoreWhite), write('  Black: '), write(ScoreBlack), nl.
+	
 
