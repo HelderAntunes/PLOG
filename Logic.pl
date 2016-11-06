@@ -66,6 +66,15 @@ updatePiecesOfPlayer(Color, [_, LegsToAdd, PincersToAdd]) :-
 	retract(player(Color, Adaptoids, Legs, Pincers, Score)),
 	assert(player(Color, NewAdaptoids, NewLegs, NewPincers, Score)).
 	
+takePiecesFromPlayer(Color, [NAdaptoids, NLegs, NPincers]) :-
+	player(Color, Adaptoids, Legs, Pincers, Score),
+	NewAdaptoids is Adaptoids - NAdaptoids,
+	NewLegs is Legs - NLegs,
+	NewPincers is Pincers - NPincers,
+	NewAdaptoids >= 0, NewLegs >= 0, NewPincers >= 0,
+	retract(player(Color, Adaptoids, Legs, Pincers, Score)),
+	assert(player(Color, NewAdaptoids, NewLegs, NewPincers, Score)).
+	
 % Se existe um caminho entre 'NoInicio' e 'NoFim' com distancia menor ou igual
 % a 'DistMax', retorna 'yes'.
 % caminho( + NoInicio, + NoFim, - Lista, + DistMax, + Board)
@@ -120,8 +129,9 @@ validPosition(R, C, Board) :- getPiece(R, C, Board, _).
 % createAdaptoid( + Color, + Row, + Column, + BoardIn, - BoardOut)
 createAdaptoid(Color, Row, Column, BoardIn, BoardOut):-
     getPiece(Row,Column,BoardIn, Piece),
-    Piece = empty, !,
+    Piece = empty, 
 	neighborValid(Row, Column, _, _, Color, BoardIn),
+	takePiecesFromPlayer(Color, [1, 0, 0]), !, 
     setPiece(Row,Column,[Color,0,0],BoardIn,BoardOut).
 	
 neighborValid(Row, Col, NeighborRow, NeighborCol, Color, Board) :-
@@ -134,10 +144,12 @@ addPincer(Color, Row, Column, BoardIn, BoardOut):-
    getPiece(Row,Column,BoardIn, Piece),
    Piece = [Color, Legs, Pincers], !,
    Total is Legs + Pincers + 1,
-   Total =< 6, !,
+   Total =< 6, 
+   takePiecesFromPlayer(Color, [0, 0, 1]), !,
    P1 is Pincers+1,
    P = [Color, Legs, P1],
    setPiece(Row, Column, P, BoardIn, BoardOut).
+
 
 % Adicionar uma perna de uma determinada cor a uma peca do tabuleiro
 %        +     +      +       +        -
@@ -145,7 +157,8 @@ addLeg(Color, Row, Column, BoardIn, BoardOut):-
    getPiece(Row,Column,BoardIn, Piece),
    Piece = [Color, Legs, Pincers], !, 
    Total is Legs + Pincers + 1,
-   Total =< 6, !,
+   Total =< 6,
+   takePiecesFromPlayer(Color, [0, 1, 0]), !, 
    L is Legs+1,
    P = [Color, L, Pincers],
    setPiece(Row, Column, P, BoardIn, BoardOut).

@@ -1,6 +1,9 @@
 :- dynamic board/1.
 :- dynamic turnColor/1.
 :- dynamic player/5.
+
+:- include('Logic.pl').
+:- include('BoardsForTest.pl').
 		
 testPrintBoard(1) :- board(X), printBoard(X).
 
@@ -193,7 +196,7 @@ game(Type):-
 	boardToTestCaptureHungryAdaptoids(InitBoard), 
     assert(board(InitBoard)),
     % player(color, adaptoids, legs, pincers, score)
-    assert(player(w, 12, 12, 12, 0)),
+	assert(player(w, 12, 12, 12, 0)), 
     assert(player(b, 12, 12, 12, 0)),
     assert(turnColor(w)),
     %ciclo de jogo
@@ -222,10 +225,11 @@ play(hh, w, b):-
     userMoveAndCapture(w, BoardIn, Board1), 
 	(testEnd(Board1), retract(board(BoardIn)), assert(board(Board1));
     nl,
+	(playerStockExpired(w), captureAdaptoids(b, Board1, BoardOut);
     write('Enter option (1-create new 2-add pincer 3-add leg): '),
     read(Option),
     userCreateOrUpdate(Option, w, Board1, Board2),
-    captureAdaptoids(b, Board2, BoardOut),  
+	captureAdaptoids(b, Board2, BoardOut)),
     %Update board
     retract(board(BoardIn)),
     assert(board(BoardOut))).
@@ -241,13 +245,18 @@ play(hh, b, w):-
     userMoveAndCapture(b, BoardIn, Board1),
 	(testEnd(Board1), retract(board(BoardIn)), assert(board(Board1));
     nl,
+	(playerStockExpired(b), captureAdaptoids(w, Board1, BoardOut);
     write('Enter option (1-create new 2-add pincer 3-add leg): '),
     read(Option),
     userCreateOrUpdate(Option, b, Board1, Board2),
-    captureAdaptoids(w, Board2, BoardOut),
+    captureAdaptoids(w, Board2, BoardOut)),
     %Update board
     retract(board(BoardIn)),
     assert(board(BoardOut))).
+	
+playerStockExpired(Color) :-
+	player(Color, Adaptoids, Legs, Pincers, _),
+	Adaptoids =:= 0, Legs =:= 0, Pincers =:= 0.
     
 userMoveAndCapture(Color, BoardIn, BoardIn):-
     findall(Legs, getPiece(_R,_C,BoardIn,[Color,Legs,_]), Pieces),
@@ -269,20 +278,26 @@ checkIfNoLegs([]).
 checkIfNoLegs([L|Legs]):-
     L is 0,
     checkIfNoLegs(Legs).
-    
+   
 userCreateOrUpdate(1, Color, BoardIn, BoardOut):-
+	player(Color, Adaptoids, _, _, _),
+	Adaptoids >= 1,
     write('Enter Coordinates of new adaptoid: '), nl,
 	readCoords(UserRow, UserCol), 
     cliToLogicCoords(UserRow, UserCol, Row, Col),
     createAdaptoid(Color, Row, Col, BoardIn, BoardOut).
     
 userCreateOrUpdate(2, Color, BoardIn, BoardOut):-
+	player(Color, _, _, Pincers, _),
+	Pincers >= 1,
     write('Enter Coordinates of adaptoid: '), nl, 
     readCoords(UserRow, UserCol), 
     cliToLogicCoords(UserRow, UserCol, Row, Col),
     addPincer(Color, Row, Col, BoardIn, BoardOut).
     
 userCreateOrUpdate(3, Color, BoardIn, BoardOut):-
+	player(Color, _, Legs, _, _),
+	Legs >= 1,
     write('Enter Coordinates of adaptoid: '), nl, 
     readCoords(UserRow, UserCol), 
     cliToLogicCoords(UserRow, UserCol, Row, Col),
