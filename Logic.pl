@@ -22,58 +22,67 @@ setPieceInRow(Col, Piece, [R|RowIn], [R|RowOut]):-
 	C1 is Col -1,
 	setPieceInRow(C1, Piece, RowIn, RowOut).
 
-%TODO: registar a captura do inimigo
 % Mover uma peca no tabuleiro e capturar, se possivel, pecas inimigas
 % moveAndCapture( + Color, + RowFrom, + ColFrom, + RowTo, + ColTo, + BoardIn, + BoardOut)
-moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut):-
+moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut, PlayerFrom, PlayerTo):-
     getPiece(RowFrom, ColFrom, BoardIn, PieceFrom),
     PieceFrom = [Color, Legs, _], !,
 	thereIsPath([RowFrom,ColFrom], [RowTo,ColTo], Legs, BoardIn),
 	getPiece(RowTo, ColTo, BoardIn, PieceTo),
-	setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardAux),
+	setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardAux, PlayerFrom, PlayerTo),
 	setPiece(RowFrom, ColFrom, empty, BoardAux, BoardOut).
 
-setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
+setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut, PlayerFrom, PlayerTo) :-
 	PieceTo = empty,
-	setPiece(RowTo, ColTo, PieceFrom, BoardIn, BoardOut).
-setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut) :-
+	setPiece(RowTo, ColTo, PieceFrom, BoardIn, BoardOut),
+    getColorOfPiece(PieceFrom, ColorFrom), getColorOfEnemy(ColorFrom, ColorTo),
+    player(ColorFrom, AFrom, LFrom, PFrom, SFrom),
+    PlayerFrom = [ColorFrom, AFrom, LFrom, PFrom, SFrom],
+    player(ColorTo, ATo, LTo, PTo, STo),
+    PlayerTo = [ColorTo, ATo, LTo, PTo, STo].
+setPieceWithMorePincers(RowTo, ColTo, PieceFrom, PieceTo, BoardIn, BoardOut, PlayerOutFrom, PlayerOutTo) :-
 	PieceTo \= empty,
 	getPincersOfPiece(PieceFrom, PincersFrom), getPincersOfPiece(PieceTo, PincersTo),
 	getColorOfPiece(PieceFrom, ColorFrom), getColorOfPiece(PieceTo, ColorTo),
 	(PincersFrom > PincersTo, setPiece(RowTo, ColTo, PieceFrom, BoardIn, BoardOut),
-	updateScoreOfPlayer(ColorFrom, 1), updatePiecesOfPlayer(ColorFrom, PieceTo);
+    player(ColorFrom, AFrom, LFrom, PFrom, SFrom),
+    PlayerIn = [ColorFrom, AFrom, LFrom, PFrom, SFrom],
+    player(ColorTo, ATo, LTo, PTo, STo),
+    PlayerOutTo = [ColorTo, ATo, LTo, PTo, STo],
+	updateScoreOfPlayer(1, PlayerIn, P1), updatePiecesOfPlayer(PieceTo, P1, PlayerOutFrom);
+    
 	PincersTo > PincersFrom, setPiece(RowTo, ColTo, PieceTo, BoardIn, BoardOut),
-	updateScoreOfPlayer(ColorTo, 1), updatePiecesOfPlayer(ColorTo, PieceFrom);
+    player(ColorFrom, AFrom, LFrom, PFrom, SFrom),
+    PlayerOutFrom = [ColorFrom, AFrom, LFrom, PFrom, SFrom],
+    player(ColorTo, ATo, LTo, PTo, STo),
+    PlayerIn = [ColorTo, ATo, LTo, PTo, STo],
+	updateScoreOfPlayer(1,PlayerIn,P1), updatePiecesOfPlayer(PieceFrom, P1, PlayerOutTo);
+    
 	PincersTo =:= PincersFrom, setPiece(RowTo, ColTo, empty, BoardIn, BoardOut),
-	updateScoreOfPlayer(ColorFrom, 1), updateScoreOfPlayer(ColorTo, 1), 
-	updatePiecesOfPlayer(ColorFrom, PieceTo), updatePiecesOfPlayer(ColorTo, PieceFrom)).
+    player(ColorFrom, AFrom, LFrom, PFrom, SFrom),
+    PlayerInFrom = [ColorFrom, AFrom, LFrom, PFrom, SFrom],
+    player(ColorTo, ATo, LTo, PTo, STo),
+    PlayerInTo = [ColorTo, ATo, LTo, PTo, STo],
+	updateScoreOfPlayer(1, PlayerInFrom, P1), updateScoreOfPlayer(1, PlayerInTo, P2), 
+	updatePiecesOfPlayer(PieceTo, P1, PlayerOutFrom), updatePiecesOfPlayer(PieceFrom, P2, PlayerOutTo)).
 	
 getPincersOfPiece([_, _, Pincers], Pincers).
 
 getColorOfPiece([Color|_], Color).
 
-updateScoreOfPlayer(Color, PointsToSum) :-
-	player(Color, Adaptoids, Legs, Pincers, Score),
-	NewScore is Score + PointsToSum,
-	retract(player(Color, Adaptoids, Legs, Pincers, Score)),
-	assert(player(Color, Adaptoids, Legs, Pincers, NewScore)).
-	
-updatePiecesOfPlayer(Color, [_, LegsToAdd, PincersToAdd]) :-
-	player(Color, Adaptoids, Legs, Pincers, Score),
+updateScoreOfPlayer(PointsToSum, [Color, Adaptoids, Legs, Pincers, Score] ,[Color, Adaptoids, Legs, Pincers, NewScore]) :-
+	NewScore is Score + PointsToSum.
+
+updatePiecesOfPlayer([_, LegsToAdd, PincersToAdd], [Color, Adaptoids, Legs, Pincers, Score], [Color, NewAdaptoids, NewLegs, NewPincers, Score]) :-
 	NewAdaptoids is Adaptoids + 1,
 	NewLegs is Legs + LegsToAdd, 
-	NewPincers is Pincers + PincersToAdd,
-	retract(player(Color, Adaptoids, Legs, Pincers, Score)),
-	assert(player(Color, NewAdaptoids, NewLegs, NewPincers, Score)).
-	
-takePiecesFromPlayer(Color, [NAdaptoids, NLegs, NPincers]) :-
-	player(Color, Adaptoids, Legs, Pincers, Score),
+	NewPincers is Pincers + PincersToAdd.
+
+takePiecesFromPlayer([NAdaptoids, NLegs, NPincers], [Color, Adaptoids, Legs, Pincers, Score], [Color, NewAdaptoids, NewLegs, NewPincers, Score]) :-
 	NewAdaptoids is Adaptoids - NAdaptoids,
 	NewLegs is Legs - NLegs,
 	NewPincers is Pincers - NPincers,
-	NewAdaptoids >= 0, NewLegs >= 0, NewPincers >= 0,
-	retract(player(Color, Adaptoids, Legs, Pincers, Score)),
-	assert(player(Color, NewAdaptoids, NewLegs, NewPincers, Score)).
+	NewAdaptoids >= 0, NewLegs >= 0, NewPincers >= 0.
 	
 % Se existe um caminho entre 'NoInicio' e 'NoFim' com distancia menor ou igual
 % a 'DistMax', retorna 'yes'.
@@ -127,11 +136,13 @@ validPosition(R, C, Board) :- getPiece(R, C, Board, _).
 
 % Criar um adaptoid basico de uma cor definida
 % createAdaptoid( + Color, + Row, + Column, + BoardIn, - BoardOut)
-createAdaptoid(Color, Row, Column, BoardIn, BoardOut):-
+createAdaptoid(Color, Row, Column, BoardIn, BoardOut, PlayerOut):-
     getPiece(Row,Column,BoardIn, Piece),
     Piece = empty, 
 	neighborValid(Row, Column, _, _, Color, BoardIn),
-	takePiecesFromPlayer(Color, [1, 0, 0]), !, 
+    player(Color, Adaptoids, Legs, Pincers, Score),
+    PlayerIn = [Color, Adaptoids, Legs, Pincers, Score],
+	takePiecesFromPlayer([1, 0, 0], PlayerIn, PlayerOut), !, 
     setPiece(Row,Column,[Color,0,0],BoardIn,BoardOut).
 	
 neighborValid(Row, Col, NeighborRow, NeighborCol, Color, Board) :-
@@ -140,12 +151,14 @@ neighborValid(Row, Col, NeighborRow, NeighborCol, Color, Board) :-
 
 % Adicionar uma tenaz de uma determinada cor a uma peca do tabuleiro
 %           +     +      +       +        -
-addPincer(Color, Row, Column, BoardIn, BoardOut):-
+addPincer(Color, Row, Column, BoardIn, BoardOut, PlayerOut):-
    getPiece(Row,Column,BoardIn, Piece),
    Piece = [Color, Legs, Pincers], !,
    Total is Legs + Pincers + 1,
    Total =< 6, 
-   takePiecesFromPlayer(Color, [0, 0, 1]), !,
+   player(Color, Adaptoids, Leg, Pin, S),
+   PlayerIn = [Color, Adaptoids, Leg, Pin, S],
+   takePiecesFromPlayer([0, 0, 1], PlayerIn, PlayerOut), !,
    P1 is Pincers+1,
    P = [Color, Legs, P1],
    setPiece(Row, Column, P, BoardIn, BoardOut).
@@ -153,39 +166,42 @@ addPincer(Color, Row, Column, BoardIn, BoardOut):-
 
 % Adicionar uma perna de uma determinada cor a uma peca do tabuleiro
 %        +     +      +       +        -
-addLeg(Color, Row, Column, BoardIn, BoardOut):-
+addLeg(Color, Row, Column, BoardIn, BoardOut, PlayerOut):-
    getPiece(Row,Column,BoardIn, Piece),
    Piece = [Color, Legs, Pincers], !, 
    Total is Legs + Pincers + 1,
    Total =< 6,
-   takePiecesFromPlayer(Color, [0, 1, 0]), !, 
+   player(Color, Adaptoids, Leg, Pin, S),
+   PlayerIn = [Color, Adaptoids, Leg, Pin, S],
+   takePiecesFromPlayer([0, 1, 0],PlayerIn,PlayerOut), !, 
    L is Legs+1,
    P = [Color, L, Pincers],
    setPiece(Row, Column, P, BoardIn, BoardOut).
 
 % Capturar adaptoid's com fome de uma determinada cor.
 % captureAdaptoids( + Color, + BoardIn, - BoardOut)
-captureAdaptoids(Color, BoardIn, BoardOut) :-
+captureAdaptoids(Color, BoardIn, BoardOut,PlayerOut) :-
 	findall([R,C], getPiece(R,C,BoardIn,[Color|_]), Pieces),
-	tryCaptureAPiece(Pieces, BoardIn, BoardOut).
+    getColorOfEnemy(Color, ColorEnemy),
+    player(ColorEnemy, Adaptoids, Legs, Pincers, Score),
+    PlayerIn = [ColorEnemy, Adaptoids, Legs, Pincers, Score],
+	tryCaptureAPiece(Pieces, BoardIn, BoardOut, PlayerIn, PlayerOut).
 
-tryCaptureAPiece([], Board, Board).
-tryCaptureAPiece([[R,C]|Ps], BoardIn, BoardOut) :-
+tryCaptureAPiece([], Board, Board, PlayerIn, PlayerIn).
+tryCaptureAPiece([[R,C]|Ps], BoardIn, BoardOut, PlayerIn, PlayerOut) :-
 	findall([NR,NC], isFreeSpace(R,C,NR,NC,BoardIn), FreeSpacesList),
 	length(FreeSpacesList, NumFreeSpaces),
 	getNumExtremetiesOfAPiece(R,C,BoardIn,Extremeties),
-	captureAdaptoid(R, C, Extremeties, NumFreeSpaces, BoardIn, BoardAux),
-	tryCaptureAPiece(Ps, BoardAux, BoardOut).
+	captureAdaptoid(R, C, Extremeties, NumFreeSpaces, BoardIn, BoardAux, PlayerIn, P1),
+	tryCaptureAPiece(Ps, BoardAux, BoardOut, P1, PlayerOut).
 	
-captureAdaptoid(R, C, Extremeties, NumFreeSpaces, BoardIn, BoardOut) :-
+captureAdaptoid(R, C, Extremeties, NumFreeSpaces, BoardIn, BoardOut, PlayerIn, PlayerOut) :-
 	Extremeties > NumFreeSpaces,
 	getPiece(R, C, BoardIn, Piece),
-	getColorOfPiece(Piece, Color),
-	getColorOfEnemy(Color, ColorEnemy),
-	updateScoreOfPlayer(ColorEnemy, 1),
-	updatePiecesOfPlayer(ColorEnemy, Piece),
+	updateScoreOfPlayer(1, PlayerIn, P1),
+	updatePiecesOfPlayer(Piece, P1, PlayerOut),
 	setPiece(R, C, empty, BoardIn, BoardOut).
-captureAdaptoid(_, _, Extremeties, NumFreeSpaces, BoardIn, BoardIn) :-
+captureAdaptoid(_, _, Extremeties, NumFreeSpaces, BoardIn, BoardIn, PlayerIn, PlayerIn) :-
 	Extremeties =< NumFreeSpaces.
 
 getNumExtremetiesOfAPiece(R,C,Board,Extremeties) :-
