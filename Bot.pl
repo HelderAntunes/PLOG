@@ -53,7 +53,7 @@ testValue(Value):-
     value(Board, Player1, Player2, Value).
 
 % valid_moves(+Board, +Player, -ListOfMoves). 
-% ListOfMoves = [RFrom, CFrom, RTo, CTo].
+% Move = [RFrom, CFrom, RTo, CTo].
 valid_moves(Board, [Color|_], ListOfMoves) :-
 	findall([R,C], getPiece(R,C,Board,[Color|_]), Pieces),
 	valid_moves_aux(Pieces, Board, ListOfMoves2),
@@ -67,7 +67,7 @@ valid_moves_aux([[RFrom,CFrom]|Ps], Board, ListOfMoves) :-
 	append(L1, L2, ListOfMoves). 
 
 % valid_moves_createAdaptoid(+ Board, + Player, - ListOfMoves)	
-% ListOfMoves = [Row, Col]
+% Move = [Row, Col]
 valid_moves_createAdaptoid(Board, Player, ListOfMoves) :-
 	findall([R, C], createAdaptoidValid(R, C, Board, Player), ListOfMoves2),
 	sort(ListOfMoves2, ListOfMoves).
@@ -77,4 +77,31 @@ createAdaptoidValid(Row, Column, Board, [Color, Adaptoids|_]) :-
 	getPiece(Row, Column, Board, Piece),
     Piece = empty, 
 	neighborValid(Row, Column, _, _, Color, Board).
+
+% valid_moves_addLeg(Board, Player, ListOfMoves)
+% Move = [Row, Col]
+valid_moves_addLeg(Board, Player, ListOfMoves) :-
+	findall([R, C], addLegValid(R, C, Board, Player), ListOfMoves2),
+	sort(ListOfMoves2, ListOfMoves).
+	
+addLegValid(Row, Column, Board, [Color, _, Legs |_]) :-
+	Legs >= 1,
+	getPiece(Row,Column,Board, Piece),
+	Piece = [Color, Legs2, Pincers],
+	Total is Legs2 + Pincers + 1,
+	Total =< 6.
+	
+% valid_moves_addPincer(Board, Player, ListOfMoves)
+% Move = [Row, Col]
+valid_moves_addPincer(Board, Player, ListOfMoves) :-
+	findall([R, C], addPincerValid(R, C, Board, Player), ListOfMoves2),
+	sort(ListOfMoves2, ListOfMoves).
+
+addPincerValid(Row, Column, Board, [Color, _, _, Pincers |_]) :-
+	Pincers >= 1,
+	getPiece(Row,Column,Board, Piece),
+	Piece = [Color, Legs, Pincers2],
+	Total is Legs + Pincers2 + 1,
+	Total =< 6.
+	
 	
