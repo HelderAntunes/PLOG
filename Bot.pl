@@ -52,9 +52,8 @@ testValue(Value):-
 
     value(Board, Player1, Player2, Value).
 
-	
-	
-% valid_moves(+Board, +Player, -ListOfMoves).
+% valid_moves(+Board, +Player, -ListOfMoves). 
+% ListOfMoves = [RFrom, CFrom, RTo, CTo].
 valid_moves(Board, [Color|_], ListOfMoves) :-
 	findall([R,C], getPiece(R,C,Board,[Color|_]), Pieces),
 	valid_moves_aux(Pieces, Board, ListOfMoves2),
@@ -66,3 +65,16 @@ valid_moves_aux([[RFrom,CFrom]|Ps], Board, ListOfMoves) :-
 	findall([RFrom, CFrom, RTo, CTo], thereIsPath([RFrom, CFrom], [RTo, CTo], Legs, Board), L1), 
 	valid_moves_aux(Ps, Board, L2),
 	append(L1, L2, ListOfMoves). 
+
+% valid_moves_createAdaptoid(+ Board, + Player, - ListOfMoves)	
+% ListOfMoves = [Row, Col]
+valid_moves_createAdaptoid(Board, Player, ListOfMoves) :-
+	findall([R, C], createAdaptoidValid(R, C, Board, Player), ListOfMoves2),
+	sort(ListOfMoves2, ListOfMoves).
+	
+createAdaptoidValid(Row, Column, Board, [Color, Adaptoids|_]) :-
+	Adaptoids >= 1,
+	getPiece(Row, Column, Board, Piece),
+    Piece = empty, 
+	neighborValid(Row, Column, _, _, Color, Board).
+	
