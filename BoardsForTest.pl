@@ -34,4 +34,17 @@ boardToTestCaptureHungryAdaptoids(
         [empty, empty, empty, empty, empty],
         [[w, 4, 0], empty, empty, empty] 
         ]). 
-		
+
+% quando executado o comando:
+% boardToTestValidMoves(_B), valid_moves(_B, [w, 0], L), length(L, N).
+% N sera igual a 16.
+boardToTestValidMoves(
+        [
+        [empty, empty, empty, empty], 
+        [empty, empty, empty, empty, empty],
+        [empty, empty, empty, empty, empty, empty],
+        [empty, [w, 2, 3], [w, 1, 2], empty, [b, 0, 0], empty, empty],
+        [empty, empty, empty, empty, empty, empty],
+        [empty, empty, empty, empty, empty],
+        [empty, empty, empty, empty] 
+        ]).
