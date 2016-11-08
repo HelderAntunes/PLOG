@@ -2,9 +2,15 @@
 value(Board, Player, Enemy, Value):-
     countPlayerPieces(Player, Board, NumPieces),
     countPlayerPieces(Enemy, Board, NumPiecesE),
+    
+    Player = [Color | _],
+    Enemy = [ColorEnemy | _],
     countStarvingAdaptoids(ColorEnemy, Board, StarvingE),
     countStarvingAdaptoids(Color, Board, Starving),
-    Value is NumPieces - NumPiecesE + StarvingE - Starving.
+    
+    countEndangeredAdaptoids(Board, Player, Enemy, Num, NumE),
+    
+    Value is NumPieces - NumPiecesE + StarvingE - Starving + NumE - Num.
 
 countStarvingAdaptoids(Color, Board, Num) :-
 	findall([R,C], getPiece(R,C,Board,[Color|_]), Pieces),
@@ -35,8 +41,32 @@ countPiecesOnBoard([[L,P]|Pieces], Num):-
     countPiecesOnBoard(Pieces, N1),
     Num is 1 + L + P + N1.
     
+countEndangeredAdaptoids(Board, Player, Enemy, Num, NumE):-
+    Player = [Color | _],
+    Enemy = [ColorEnemy | _],
+    findall([R,C], getPiece(R,C,Board,[Color|_]), Pieces),
+    findall([R,C], getPiece(R,C,Board,[ColorEnemy|_]), PiecesEnemy),
+    countEndangeredAdaptoidsAux(Color, Board, Pieces, PiecesEnemy, Num),
+    countEndangeredAdaptoidsAux(Color, Board, PiecesEnemy, Pieces, NumE).
+
+countEndangeredAdaptoidsAux(_, _, _, [], 0).    
+countEndangeredAdaptoidsAux(Color, Board, Pieces, [Enemy | PiecesEnemy], Num):-
+    countDirectThreats(Color, Board, Pieces, Enemy, N1),
+    countEndangeredAdaptoidsAux(Color, Board, Pieces, PiecesEnemy, N2),
+    Num is N1 + N2.
+    
+countDirectThreats(_, _, [], _, 0).
+countDirectThreats(Color, Board, [Piece|Pieces], Enemy, Num):-
+    Piece = [RowFrom, ColFrom],
+    Enemy = [RowTo, ColTo],
+    moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,Board,_, _, _),
+    countDirectThreats(Color, Board, Pieces, Enemy, N1),
+    Num is N1 + 1 .
+countDirectThreats(Color, Board, [_|Pieces], Enemy, Num):-
+    countDirectThreats(Color, Board, Pieces, Enemy, Num).
+    
 testValue(Value):-
-    boardToTestCaptureHungryAdaptoids(Board),
+    boardToTestEndGame(Board),
     Player1 = [w, 12, 12, 12, 0], 
     Player2 = [b, 12, 12, 12, 0],
     
@@ -49,6 +79,10 @@ testValue(Value):-
     write(S1), nl,
     countStarvingAdaptoids(b, Board, S2),
     write(S2), nl,
+    
+    countEndangeredAdaptoids(Board, Player1, Player2, Num, NumE),
+    write(Num), nl,
+    write(NumE), nl,
 
     value(Board, Player1, Player2, Value).
 
