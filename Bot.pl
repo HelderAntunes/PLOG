@@ -10,7 +10,7 @@ value(Board, Player, Enemy, Value):-
     
     countEndangeredAdaptoids(Board, Player, Enemy, Num, NumE),
     
-    Value is NumPieces - NumPiecesE + StarvingE - Starving + NumE - Num.
+    Value is NumPieces - NumPiecesE + StarvingE - Starving + NumE - Num, !.
 
 countStarvingAdaptoids(Color, Board, Num) :-
 	findall([R,C], getPiece(R,C,Board,[Color|_]), Pieces),
@@ -149,5 +149,76 @@ addPincerValid(Row, Column, Board, [Color, _, _, Pincers |_]) :-
 	Piece = [Color, Legs, Pincers2],
 	Total is Legs + Pincers2 + 1,
 	Total =< 6.
-	
-	
+
+%Choses the best move to be done in this part of the game returns BestMove = [Type,Row,Column].
+%bestMoveCreateOrUpdate(+Board, +Player, -BestMove   
+bestMoveCreateOrUpdate(Board, Player,BestMove):-
+    setof([Value, R, C], valueOfCreation(R, C, Board, Player, Value), ValuesOfCreation),
+    last(ValuesOfCreation, BestCreation),
+    setof([Value, R, C], valueOfAddLeg(R, C, Board, Player, Value), ValuesOfAddLeg),
+    last(ValuesOfAddLeg, BestAddLeg),
+    setof([Value, R, C], valueOfAddPincer(R, C, Board, Player, Value), ValuesOfAddPincer),
+    last(ValuesOfAddPincer, BestAddPincer),
+    chooseBestMoveCreateOrUpdate(BestCreation,BestAddLeg,BestAddPincer,BestMove).
+%For the unlikely case all adaptoids have max evolution
+bestMoveCreateOrUpdate(Board, Player,['creation',R,C]):-
+    setof([Value, R, C], valueOfCreation(R, C, Board, Player, Value), ValuesOfCreation),
+    getBest(ValuesOfCreation, BestCreation),
+    BestCreation = [_,R,C].
+%In case no adaptoids can be created
+bestMoveCreateOrUpdate(Board, Player,BestMove):-
+    setof([Value, R, C], valueOfAddLeg(R, C, Board, Player, Value), ValuesOfAddLeg),
+    last(ValuesOfAddLeg, BestAddLeg),
+    setof([Value, R, C], valueOfAddPincer(R, C, Board, Player, Value), ValuesOfAddPincer),
+    last(ValuesOfAddPincer, BestAddPincer),
+    chooseBestMoveCreateOrUpdate([-10000,0,0],BestAddLeg,BestAddPincer,BestMove).     
+ 
+%Returns list of enemy player status
+getEnemy(Color, Enemy):-
+    getColorOfEnemy(Color, ColorEnemy),
+    player(ColorEnemy, Adaptoids, Legs, Pincers, Score),
+    Enemy = [ColorEnemy, Adaptoids, Legs, Pincers, Score].
+
+%Given the coordinates the board and the player returns the value of the creation move
+%valueOfCreation(+R, +C, +BoardIn, +Player, -Value)    
+valueOfCreation(R, C, BoardIn, Player, Value):-
+    Player = [Color | _],
+    getEnemy(Color, Enemy),
+    createAdaptoidValid(R, C, BoardIn, Player), 
+    createAdaptoid(Color, R, C, BoardIn, BoardOut, PlayerOut),
+    value(BoardOut, PlayerOut, Enemy, Value).	
+
+%Given the coordinates the board and the player returns the value of adding a leg
+%valueOfAddLeg(+R, +C, +BoardIn, +Player, -Value)       
+valueOfAddLeg(R, C, BoardIn, Player, Value):-
+    Player = [Color | _],
+    getEnemy(Color, Enemy),
+    addLegValid(R, C, BoardIn, Player), 
+    addLeg(Color, R, C, BoardIn, BoardOut, PlayerOut),
+    value(BoardOut, PlayerOut, Enemy, Value).	
+
+%Given the coordinates the board and the player returns the value of adding a pincer
+%valueOfAddPincer(+R, +C, +BoardIn, +Player, -Value)      
+valueOfAddPincer(R, C, BoardIn, Player, Value):-
+    Player = [Color | _],
+    getEnemy(Color, Enemy),
+    addPincerValid(R, C, BoardIn, Player), 
+    addPincer(Color, R, C, BoardIn, BoardOut, PlayerOut),
+    value(BoardOut, PlayerOut, Enemy, Value).
+
+%choses the best among the best of each type of move returns BestMove=[Type,Row,Column]
+%chooseBestMoveCreateOrUpdate(+BestCreation,+BestAddLeg,+BestAddPincer,-BestMove)	
+chooseBestMoveCreateOrUpdate([ValCreation,R,C],[ValAddLeg | _],[ValAddPincer | _],['creation',R,C]):-
+    ValCreation >= ValAddLeg, ValCreation >= ValAddPincer, ! .
+chooseBestMoveCreateOrUpdate([ValCreation |_],[ValAddLeg,R,C],[ValAddPincer | _],['addLeg',R,C]):-
+    ValAddLeg >= ValCreation, ValAddLeg >= ValAddPincer, ! .
+chooseBestMoveCreateOrUpdate(_,_,[_,R,C],['addPincer',R,C]).
+
+%For testing purposes only
+testBestMove(ListOfMoves):-
+    assert(player(w, 0, 12, 12, 0)), 
+    assert(player(b, 12, 12, 12, 0)),
+    
+    boardToTestValidMoves(Board),
+    Player = [w, 0, 12, 12, 0],
+    bestMoveCreateOrUpdate(Board, Player, ListOfMoves).
