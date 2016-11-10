@@ -46,8 +46,8 @@ countEndangeredAdaptoids(Board, Player, Enemy, Num, NumE):-
     Enemy = [ColorEnemy | _],
     findall([R,C], getPiece(R,C,Board,[Color|_]), Pieces),
     findall([R,C], getPiece(R,C,Board,[ColorEnemy|_]), PiecesEnemy),
-    countEndangeredAdaptoidsAux(Color, Board, Pieces, PiecesEnemy, Num),
-    countEndangeredAdaptoidsAux(Color, Board, PiecesEnemy, Pieces, NumE).
+    countEndangeredAdaptoidsAux(Color, Board, Pieces, PiecesEnemy, NumE),
+    countEndangeredAdaptoidsAux(ColorEnemy, Board, PiecesEnemy, Pieces, Num).
 
 countEndangeredAdaptoidsAux(_, _, _, [], 0).    
 countEndangeredAdaptoidsAux(Color, Board, Pieces, [Enemy | PiecesEnemy], Num):-
@@ -64,25 +64,29 @@ countDirectThreats(Color, Board, [Piece|Pieces], Enemy, Num):-
     Num is N1 + 1 .
 countDirectThreats(Color, Board, [_|Pieces], Enemy, Num):-
     countDirectThreats(Color, Board, Pieces, Enemy, Num).
-    
+   
+%For testing only  
 testValue(Value):-
+    assert(player(w, 12, 12, 12, 0)), 
+    assert(player(b, 12, 12, 12, 0)),
+    
     boardToTestEndGame(Board),
     Player1 = [w, 12, 12, 12, 0], 
     Player2 = [b, 12, 12, 12, 0],
     
     countPlayerPieces(Player1, Board, NumPieces1),
-    write(NumPieces1), nl,
+    write('Number of white pieces '), write(NumPieces1), nl,
     countPlayerPieces(Player2, Board, NumPieces2),
-    write(NumPieces2), nl,
+    write('Number of black pieces '), write(NumPieces2), nl,
     
     countStarvingAdaptoids(w, Board, S1),
-    write(S1), nl,
+    write('Number of starving white '), write(S1), nl,
     countStarvingAdaptoids(b, Board, S2),
-    write(S2), nl,
+    write('Number of starving black '), write(S2), nl,
     
     countEndangeredAdaptoids(Board, Player1, Player2, Num, NumE),
-    write(Num), nl,
-    write(NumE), nl,
+    write('Number of endagered white '), write(Num), nl,
+    write('Number of endagered black '), write(NumE), nl,
 
     value(Board, Player1, Player2, Value).
 
