@@ -40,7 +40,11 @@ countPiecesOnBoard([], 0).
 countPiecesOnBoard([[L,P]|Pieces], Num):-
     countPiecesOnBoard(Pieces, N1),
     Num is 1 + L + P + N1.
-    
+
+% conta o numero de pecas em perigo de serem capturadas:
+% do jogador (Num);
+% do jogador inimigo(NumE) 
+% countEndangeredAdaptoids( + Board, + Player, + Enemy, - Num, - NumE)
 countEndangeredAdaptoids(Board, Player, Enemy, Num, NumE):-
     Player = [Color | _],
     Enemy = [ColorEnemy | _],
@@ -49,12 +53,16 @@ countEndangeredAdaptoids(Board, Player, Enemy, Num, NumE):-
     countEndangeredAdaptoidsAux(Color, Board, Pieces, PiecesEnemy, NumE),
     countEndangeredAdaptoidsAux(ColorEnemy, Board, PiecesEnemy, Pieces, Num).
 
+% conta o numero de ataques das pecas inimigas as pecas do jogador
+% countEndangeredAdaptoidsAux(+Color, + Board, + Pieces, + PiecesEnemy, - Num)
 countEndangeredAdaptoidsAux(_, _, _, [], 0).    
 countEndangeredAdaptoidsAux(Color, Board, Pieces, [Enemy | PiecesEnemy], Num):-
     countDirectThreats(Color, Board, Pieces, Enemy, N1),
     countEndangeredAdaptoidsAux(Color, Board, Pieces, PiecesEnemy, N2),
     Num is N1 + N2.
-    
+   
+% conta o numero de ataques de uma peca inimiga contra as pecas do jogador
+% countDirectThreats('Color, + Board, + Pieces, + Enemy, - Num)   
 countDirectThreats(_, _, [], _, 0).
 countDirectThreats(Color, Board, [Piece|Pieces], Enemy, Num):-
     Piece = [RowFrom, ColFrom],

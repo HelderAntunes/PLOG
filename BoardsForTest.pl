@@ -6,7 +6,7 @@ boardToTestEndGame(
         [empty, empty, empty, empty, empty],
         [empty, empty, empty, empty, empty, empty],
         [empty, [w, 3, 3], empty, empty, [b, 0, 0], empty, empty],
-        [empty, empty, empty, empty, empty, empty],
+        [empty, empty, empty, [w, 3, 0], empty, empty],
         [empty, empty, empty, empty, empty],
         [empty, empty, empty, empty] 
         ]). 
