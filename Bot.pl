@@ -40,30 +40,46 @@ countPiecesOnBoard([], 0).
 countPiecesOnBoard([[L,P]|Pieces], Num):-
     countPiecesOnBoard(Pieces, N1),
     Num is 1 + L + P + N1.
-    
+
+% conta o numero de pecas em perigo de serem capturadas:
+% do jogador (Num);
+% do jogador inimigo(NumE) 
+% countEndangeredAdaptoids( + Board, + Player, + Enemy, - Num, - NumE)
 countEndangeredAdaptoids(Board, Player, Enemy, Num, NumE):-
     Player = [Color | _],
     Enemy = [ColorEnemy | _],
     findall([R,C], getPiece(R,C,Board,[Color|_]), Pieces),
-    findall([R,C], getPiece(R,C,Board,[ColorEnemy|_]), PiecesEnemy),
-    countEndangeredAdaptoidsAux(Color, Board, Pieces, PiecesEnemy, Num),
-    countEndangeredAdaptoidsAux(Color, Board, PiecesEnemy, Pieces, NumE).
+    findall([R2,C2], getPiece(R2,C2,Board,[ColorEnemy|_]), PiecesEnemy),
+    countEndangeredAdaptoidsAux(Board, Pieces, PiecesEnemy, Num),
+    countEndangeredAdaptoidsAux(Board, PiecesEnemy, Pieces, NumE).
 
-countEndangeredAdaptoidsAux(_, _, _, [], 0).    
-countEndangeredAdaptoidsAux(Color, Board, Pieces, [Enemy | PiecesEnemy], Num):-
-    countDirectThreats(Color, Board, Pieces, Enemy, N1),
-    countEndangeredAdaptoidsAux(Color, Board, Pieces, PiecesEnemy, N2),
-    Num is N1 + N2.
-    
-countDirectThreats(_, _, [], _, 0).
-countDirectThreats(Color, Board, [Piece|Pieces], Enemy, Num):-
-    Piece = [RowFrom, ColFrom],
-    Enemy = [RowTo, ColTo],
-    moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,Board,_, _, _),
-    countDirectThreats(Color, Board, Pieces, Enemy, N1),
-    Num is N1 + 1 .
-countDirectThreats(Color, Board, [_|Pieces], Enemy, Num):-
-    countDirectThreats(Color, Board, Pieces, Enemy, Num).
+% conta o numero de ataques das pecas inimigas as pecas do jogador
+% countEndangeredAdaptoidsAux(+ Board, + Pieces, + PiecesEnemy, - Num)
+countEndangeredAdaptoidsAux(_, [], _, 0).    
+countEndangeredAdaptoidsAux(Board, [Piece|Pieces], Enemies, Num):-
+    pieceInDanger(Board, Piece, Enemies),
+    countEndangeredAdaptoidsAux(Board, Pieces, Enemies, N2),
+    Num is 1 + N2.
+countEndangeredAdaptoidsAux(Board, [_|Pieces], Enemies, Num):-
+    countEndangeredAdaptoidsAux(Board, Pieces, Enemies, Num).
+
+% retorna 'yes' se houver pelo menos 1 ataque direto a peca 'Piece'
+% pieceInDanger(+ Board, + Piece, + Enemies)
+pieceInDanger(Board, Piece, [Enemy|_]):-
+    Piece = [RowTo, ColTo],
+    Enemy = [RowFrom, ColFrom],
+    checkIfIsPossibleAtack(RowFrom,ColFrom,RowTo,ColTo,Board).
+pieceInDanger(Board, Piece, [_|Enemies]):-
+	pieceInDanger(Board, Piece, Enemies).
+
+% retorna 'yes' se e possivel uma peca capturar outra. caso contrario retorna 'no'.
+checkIfIsPossibleAtack(RowFrom,ColFrom,RowTo,ColTo,Board):-
+    getPiece(RowFrom, ColFrom, Board, PieceFrom),
+    PieceFrom = [_, Legs, Pincers], !,
+	thereIsPath([RowFrom,ColFrom], [RowTo,ColTo], Legs, Board),
+	getPiece(RowTo, ColTo, Board, PieceTo),
+	PieceTo = [_, _, PincersTo],
+	Pincers > PincersTo.
     
 testValue(Value):-
     boardToTestEndGame(Board),
