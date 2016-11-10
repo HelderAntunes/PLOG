@@ -251,12 +251,40 @@ chooseBestMoveCreateOrUpdate([ValCreation |_],[ValAddLeg,R,C],[ValAddPincer | _]
     ValAddLeg >= ValCreation, ValAddLeg >= ValAddPincer, ! .
 chooseBestMoveCreateOrUpdate(_,_,[_,R,C],['addPincer',R,C]).
 
+%Generates a random possible move
+%randomMoveCreateOrUpdate(+Board, +Player,-Move)
+randomMoveCreateOrUpdate(Board, Player,Move):-
+    random(1, 4, Type),
+    randomMoveCreateOrUpdateAux(Type, Board, Player,Move).
+
+%Generates a random possible move according to type given (Type->action: 1->creation 2->addLeg 3->addPincer) if not possible tries another type of move
+%randomMoveCreateOrUpdateAux(+Type, +Board, +Player,-Move)
+randomMoveCreateOrUpdateAux(1, Board, Player,['creation',R,C]):-
+    valid_moves_createAdaptoid(Board, Player, ListOfMoves),
+    ListOfMoves \= [], !,
+    random_member([R,C], ListOfMoves).
+randomMoveCreateOrUpdateAux(1, Board, Player,Move):-    
+    random(2, 4, Type),
+    randomMoveCreateOrUpdateAux(Type, Board, Player,Move).
+randomMoveCreateOrUpdateAux(2, Board, Player,['addLeg',R,C]):-
+    valid_moves_addLeg(Board, Player, ListOfMoves),
+    ListOfMoves \= [], !,
+    random_member([R,C], ListOfMoves).
+randomMoveCreateOrUpdateAux(3, Board, Player,['addPincer',R,C]):-
+    valid_moves_addPincer(Board, Player, ListOfMoves),
+    ListOfMoves \= [], !,
+    random_member([R,C], ListOfMoves).
+randomMoveCreateOrUpdateAux(Type, Board, Player,Move):-
+    Type =\= 1,
+    randomMoveCreateOrUpdateAux(1, Board, Player,Move).
+
 %For testing purposes only
-testBestMove(ListOfMoves):-
-    assert(player(w, 0, 12, 12, 0)), 
+testBestMove(BestMove, Move):-
+    assert(player(w, 12, 12, 12, 0)), 
     assert(player(b, 12, 12, 12, 0)),
     
     boardToTestValidMoves(Board),
-    Player = [w, 0, 12, 12, 0],
-    bestMoveCreateOrUpdate(Board, Player, ListOfMoves).
+    Player = [w, 12, 12, 12, 0],
+    bestMoveCreateOrUpdate(Board, Player, BestMove),
+    randomMoveCreateOrUpdate(Board, Player,Move).
 
