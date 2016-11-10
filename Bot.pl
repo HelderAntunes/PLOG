@@ -253,6 +253,24 @@ chooseBestMoveCreateOrUpdate([ValCreation |_],[ValAddLeg,R,C],[ValAddPincer | _]
     ValAddLeg >= ValCreation, ValAddLeg >= ValAddPincer, ! .
 chooseBestMoveCreateOrUpdate(_,_,[_,R,C],['addPincer',R,C]).
 
+%Generates a random possible first move
+%randomFirstMove(+ Board, + Player, - Move) 
+randomFirstMove(Board, Player, Move) :-
+	valid_moves(Board, Player, ListOfMoves),
+	length(ListOfMoves, NumMoves),
+	MaxLimit is NumMoves + 1,
+	random(1, MaxLimit, IndexOfMove),
+	nth1(IndexOfMove, ListOfMoves, Move).
+	
+test_randomFirstMove :-
+	assert(player(w, 12, 12, 12, 0)), 
+    assert(player(b, 12, 12, 12, 0)),
+    
+    boardToTestValidMoves(Board),
+    Player = [w, 12, 12, 12, 0],
+    randomFirstMove(Board, Player, Move),
+	print(Move), nl.
+	
 %Generates a random possible move
 %randomMoveCreateOrUpdate(+Board, +Player,-Move)
 randomMoveCreateOrUpdate(Board, Player,Move):-
