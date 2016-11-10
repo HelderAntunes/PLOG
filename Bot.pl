@@ -1,3 +1,5 @@
+:- use_module(library(random)).
+
 %       +       +      +      -
 value(Board, Player, Enemy, Value):-
     countPlayerPieces(Player, Board, NumPieces),
