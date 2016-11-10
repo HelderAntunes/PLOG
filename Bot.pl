@@ -3,13 +3,13 @@ value(Board, Player, Enemy, Value):-
     countPlayerPieces(Player, Board, NumPieces),
     countPlayerPieces(Enemy, Board, NumPiecesE),
     
-    Player = [Color | _],
-    Enemy = [ColorEnemy | _],
+    Player = [Color|_],
+    Enemy = [ColorEnemy|_],
     countStarvingAdaptoids(ColorEnemy, Board, StarvingE),
     countStarvingAdaptoids(Color, Board, Starving),
     
     countEndangeredAdaptoids(Board, Player, Enemy, Num, NumE),
-    
+ 
     Value is NumPieces - NumPiecesE + StarvingE - Starving + NumE - Num.
 
 countStarvingAdaptoids(Color, Board, Num) :-
@@ -39,7 +39,7 @@ countPlayerPieces(Player, Board, NumPieces):-
 countPiecesOnBoard([], 0).    
 countPiecesOnBoard([[L,P]|Pieces], Num):-
     countPiecesOnBoard(Pieces, N1),
-    Num is 1 + L + P + N1.
+    Num is 6 + L + P + N1.
 
 % conta o numero de pecas em perigo de serem capturadas:
 % do jogador (Num);
@@ -149,5 +149,40 @@ addPincerValid(Row, Column, Board, [Color, _, _, Pincers |_]) :-
 	Piece = [Color, Legs, Pincers2],
 	Total is Legs + Pincers2 + 1,
 	Total =< 6.
+
+
+% Encontra a melhor jogada possivel no primeiro movimento para o jogador 'Player'.
+% Uma jogada e definida como: [RFrom, CFrom, RTo, CTo].
+% findBestFirstMove( + Board, + Player, + Enemy, - RFrom, - CFrom, - RTo, - CTo) 
+findBestFirstMove(Board, Player, Enemy, RFrom, CFrom, RTo, CTo) :-
+	valid_moves(Board, Player, ListOfMoves),
+	findBestFirstMoveAux(Board, Player, Enemy, ListOfMoves, 0, 1, 1, MaxValue, IndexOfBestMove),
+	write(MaxValue), nl,
+	nth1(IndexOfBestMove, ListOfMoves, [RFrom, CFrom, RTo, CTo]).
+
+findBestFirstMoveAux(_, _, _, [], CurrMax, CurrIndex, _, CurrMax, CurrIndex).
+findBestFirstMoveAux(Board, Player, Enemy, [Move|Ms], CurrMax, CurrIndexMax, CurrIndex, MaxValue, IndexOfBestMove) :-
+	Player = [Color|_],
+	Move = [RFrom, CFrom, RTo, CTo],
+	moveAndCapture(Color, RFrom, CFrom, RTo, CTo, Board, BoardOut, _, _),
+	value(BoardOut, Player, Enemy, Value),
+	NewIndex is CurrIndex + 1,
+	(Value > CurrMax,
+	findBestFirstMoveAux(Board, Player, Enemy, Ms, Value, CurrIndex, NewIndex, MaxValue, IndexOfBestMove);
+	Value =< CurrMax,
+	findBestFirstMoveAux(Board, Player, Enemy, Ms, CurrMax, CurrIndexMax, NewIndex, MaxValue, IndexOfBestMove)).
 	
+test_findBestFirstMove :-
+    assert(player(w, 12, 12, 12, 0)), 
+    assert(player(b, 12, 12, 12, 0)),
+    
+    boardToTestEndGame(Board),
+    Player1 = [w, 12, 12, 12, 0], 
+    Player2 = [b, 12, 12, 12, 0],
+  
+    findBestFirstMove(Board, Player1, Player2, RFrom, CFrom, RTo, CTo),
 	
+	write(RFrom), write('-'), write(CFrom), 
+	write(' -> '), 
+	write(RTo), write('-'), write(CTo), nl, nl.
+
