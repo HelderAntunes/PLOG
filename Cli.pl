@@ -459,8 +459,7 @@ botCreateOrUpdateByType('addPincer', Row, Col, Color, BoardIn, BoardOut, PlayerO
     addPincer(Color, Row, Col, BoardIn, BoardOut, PlayerOut).
 	
 readCoords(Row, Col) :-  
-	write('Row '), read(Row), 
-	write('Col '), read(Col).
+	write('Row-Col'), read(Row-Col).
 	
 showMaterialOfPlayers :-
 	player(w, Adaptoids, Legs, Pincers, _),
