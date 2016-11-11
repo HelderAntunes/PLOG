@@ -3,7 +3,7 @@
 %       +       +      +      -
 value(Board, Player, Enemy, Value):-
     countPlayerPieces(Player, Board, NumPieces),
-    countPlayerPieces(Enemy, Board, NumPiecesE),
+    countEnemiesPieces(Enemy, Board, NumPiecesE),
     
     Player = [Color|_],
     Enemy = [ColorEnemy|_],
@@ -42,7 +42,22 @@ countPlayerPieces(Player, Board, NumPieces):-
 countPiecesOnBoard([], 0).    
 countPiecesOnBoard([[L,P]|Pieces], Num):-
     countPiecesOnBoard(Pieces, N1),
-    Num is 6 + L + P + N1.
+	avoidEmptyAdaptoids(L, P, Factor),
+	Num is 1 + L + P - abs(L-P) + N1 + Factor.
+	
+avoidEmptyAdaptoids(0, 0, -1).
+avoidEmptyAdaptoids(_, _, 0).
+
+countEnemiesPieces(Player, Board, NumPieces):-
+    Player = [Color, Adaptoids, Legs, Pincers, Score],
+    findall([L,P], getPiece(_,_,Board,[Color,L,P]), Pieces),
+    countEnemiesOnBoard(Pieces, NumPiecesOnBoard),
+    NumPieces is Adaptoids + Legs + Pincers + Score + NumPiecesOnBoard .
+
+countEnemiesOnBoard([], 0).    
+countEnemiesOnBoard([_|Pieces], Num):-
+    countEnemiesOnBoard(Pieces, N1),
+	Num is 2 + N1.
 
 % conta o numero de pecas em perigo de serem capturadas:
 % do jogador (Num);
@@ -159,9 +174,12 @@ addPincerValid(Row, Column, Board, [Color, _, _, Pincers |_]) :-
 % findBestFirstMove( + Board, + Player, + Enemy, - RFrom, - CFrom, - RTo, - CTo) 
 findBestFirstMove(Board, Player, Enemy, RFrom, CFrom, RTo, CTo) :-
 	valid_moves(Board, Player, ListOfMoves),
-	findBestFirstMoveAux(Board, Player, Enemy, ListOfMoves, 0, 1, 1, MaxValue, IndexOfBestMove),
-	write(MaxValue), nl,
-	nth1(IndexOfBestMove, ListOfMoves, [RFrom, CFrom, RTo, CTo]).
+	findBestFirstMoveAux(Board, Player, Enemy, ListOfMoves, -10000, 1, 1, MaxValue, _),
+	findBestFirstMoveAux2(Board, Player, Enemy, ListOfMoves, MaxValue, BestMoves),
+	length(BestMoves, N), 
+	Limit is N + 1,
+	random(1, Limit, IndexOfBestMove),
+	nth1(IndexOfBestMove, BestMoves, [RFrom, CFrom, RTo, CTo]).
 
 findBestFirstMoveAux(_, _, _, [], CurrMax, CurrIndex, _, CurrMax, CurrIndex).
 findBestFirstMoveAux(Board, Player, Enemy, [Move|Ms], CurrMax, CurrIndexMax, CurrIndex, MaxValue, IndexOfBestMove) :-
@@ -174,16 +192,28 @@ findBestFirstMoveAux(Board, Player, Enemy, [Move|Ms], CurrMax, CurrIndexMax, Cur
 	findBestFirstMoveAux(Board, Player, Enemy, Ms, Value, CurrIndex, NewIndex, MaxValue, IndexOfBestMove);
 	Value =< CurrMax,
 	findBestFirstMoveAux(Board, Player, Enemy, Ms, CurrMax, CurrIndexMax, NewIndex, MaxValue, IndexOfBestMove)).
-	
+
+findBestFirstMoveAux2(_, _, _, [], _, []).
+findBestFirstMoveAux2(Board, Player, Enemy, [Move|Ms], MaxValue, BestMoves) :-
+	Player = [Color|_],
+	Move = [RFrom, CFrom, RTo, CTo],
+	moveAndCapture(Color, RFrom, CFrom, RTo, CTo, Board, BoardOut, _, _),
+	value(BoardOut, Player, Enemy, Value), 
+	(Value =:= MaxValue,
+	findBestFirstMoveAux2(Board, Player, Enemy, Ms, MaxValue, BestMovesAux),
+	LM = [Move], append(LM, BestMovesAux, BestMoves);
+	Value < MaxValue, 
+	findBestFirstMoveAux2(Board, Player, Enemy, Ms, MaxValue, BestMoves)).
+
 test_findBestFirstMove :-
     assert(player(w, 12, 12, 12, 0)), 
     assert(player(b, 12, 12, 12, 0)),
     
-    boardToTestEndGame(Board),
+    boardToTestCaptureHungryAdaptoids(Board), printBoard(Board), 
     Player1 = [w, 12, 12, 12, 0], 
     Player2 = [b, 12, 12, 12, 0],
   
-    findBestFirstMove(Board, Player1, Player2, RFrom, CFrom, RTo, CTo),
+    findBestFirstMove(Board, Player1, Player2, RFrom, CFrom, RTo, CTo),  
 	
 	write(RFrom), write('-'), write(CFrom), 
 	write(' -> '), 
