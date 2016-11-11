@@ -1,6 +1,7 @@
 :- dynamic board/1.
 :- dynamic turnColor/1.
 :- dynamic player/5.
+:- dynamic computerLevel/1.
 
 :- include('Logic.pl').
 :- include('BoardsForTest.pl').
@@ -189,7 +190,14 @@ writeWhoWon(_,_):-
     write('White won!!!'), nl .
 writeWhoWon(_,_):-
     turnColor(w),
-    write('Black won!!!'), nl .  
+    write('Black won!!!'), nl . 
+
+setLevel(hh):- !.
+setLevel(Type):-
+    Type \= hh,
+    write('Enter computer level (1-easy 2-hard): '),
+    read(Option),
+    assert(computerLevel(Option)).
     
 % game(Type)
 game(Type):-
@@ -199,7 +207,8 @@ game(Type):-
     % player(color, adaptoids, legs, pincers, score)
 	assert(player(w, 12, 12, 12, 0)), 
     assert(player(b, 12, 12, 12, 0)),
-    assert(turnColor(w)),
+    assert(turnColor(b)),
+    setLevel(Type),
     %ciclo de jogo
     repeat,
         turnColor(ColorIn),
@@ -212,15 +221,47 @@ game(Type):-
     retract(board(_)),
     retract(player(w,_,_,_,_)),
     retract(player(b,_,_,_,_)), 
-	retract(turnColor(_)).
+	retract(turnColor(_)),
+    retract(computerLevel(_)).
+    
+% writeWhoIsPlaying(Color)
+writeWhoIsPlaying(w):-
+    write('White playing').
+writeWhoIsPlaying(b):-
+    write('Black playing').
 
-% joga(Type, ColorIn, ColorOut)
-play(hh, w, b):-
+% play(Type, ColorIn, ColorOut)
+play(hh, ColorIn, ColorOut):-
+    getColorOfEnemy(ColorIn, ColorOut),
     board(BoardIn),
     %jogada
 	showScores, nl,
 	showMaterialOfPlayers, nl,
-    write('White playing'), nl,
+    writeWhoIsPlaying(ColorIn), nl,
+    printBoard(BoardIn),
+    nl,
+    userMoveAndCapture(ColorIn, BoardIn, Board1, PlayerFrom, PlayerTo), 
+    updatePlayer(PlayerFrom),
+    updatePlayer(PlayerTo),
+	(testEnd(Board1), retract(board(BoardIn)), assert(board(Board1));
+    nl,
+	(playerStockExpired(ColorIn), captureAdaptoids(ColorOut, Board1, BoardOut);
+    write('Enter option (1-create new 2-add pincer 3-add leg): '),
+    read(Option),
+    userCreateOrUpdate(Option, ColorIn, Board1, Board2, PlayerOut),
+    updatePlayer(PlayerOut),
+	captureAdaptoids(ColorOut, Board2, BoardOut,PlayerOut2)),
+    updatePlayer(PlayerOut2),
+    %Update board
+    retract(board(BoardIn)),
+    assert(board(BoardOut))).
+    
+play(hc, w, b):-
+    board(BoardIn),
+    %jogada
+	showScores, nl,
+	showMaterialOfPlayers, nl,
+    writeWhoIsPlaying(w), nl,
     printBoard(BoardIn),
     nl,
     userMoveAndCapture(w, BoardIn, Board1, PlayerFrom, PlayerTo), 
@@ -238,8 +279,8 @@ play(hh, w, b):-
     %Update board
     retract(board(BoardIn)),
     assert(board(BoardOut))).
-   
-play(hh, b, w):-
+    
+play(hc, b, w):-
     board(BoardIn),
     %jogada
 	showScores, nl,
@@ -247,15 +288,13 @@ play(hh, b, w):-
     write('Black playing'), nl, 
     printBoard(BoardIn),
     nl,
-    userMoveAndCapture(b, BoardIn, Board1, PlayerFrom, PlayerTo),
+    botMoveAndCapture(b, BoardIn, Board1, PlayerFrom, PlayerTo),
     updatePlayer(PlayerFrom),
     updatePlayer(PlayerTo),
 	(testEnd(Board1), retract(board(BoardIn)), assert(board(Board1));
     nl,
 	(playerStockExpired(b), captureAdaptoids(w, Board1, BoardOut);
-    write('Enter option (1-create new 2-add pincer 3-add leg): '),
-    read(Option),
-    userCreateOrUpdate(Option, b, Board1, Board2, PlayerOut),
+    botCreateOrUpdate(b, Board1, Board2, PlayerOut),
     updatePlayer(PlayerOut),
     captureAdaptoids(w, Board2, BoardOut, PlayerOut2)),
     updatePlayer(PlayerOut2),
@@ -287,6 +326,37 @@ userMoveAndCapture(Color, BoardIn, BoardOut, PlayerFrom, PlayerTo):-
     moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut, PlayerFrom, PlayerTo),
     printBoard(BoardOut),
     nl.
+    
+botMoveAndCapture(Color, BoardIn, BoardIn, PlayerFrom, PlayerTo):-
+    findall(Legs, getPiece(_R,_C,BoardIn,[Color,Legs,_]), Pieces),
+    checkIfNoLegs(Pieces), !,
+    player(Color, AFrom, LFrom, PFrom, SFrom),
+    PlayerFrom = [Color, AFrom, LFrom, PFrom, SFrom],
+    getColorOfEnemy(Color, ColorEnemy),
+    player(ColorEnemy, ATo, LTo, PTo, STo),
+    PlayerTo = [ColorEnemy, ATo, LTo, PTo, STo].
+    
+botMoveAndCapture(Color, BoardIn, BoardOut, PlayerFrom, PlayerTo):-
+    player(Color, AFrom, LFrom, PFrom, SFrom),
+    Player = [Color, AFrom, LFrom, PFrom, SFrom],
+    computerLevel(1),
+    randomFirstMove(BoardIn, Player, Move),
+    Move = [RFrom, CFrom, RTo, CTo],
+    moveAndCapture(Color,RFrom,CFrom,RTo,CTo,BoardIn,BoardOut, PlayerFrom, PlayerTo),
+    printBoard(BoardOut),
+    nl.
+    
+botMoveAndCapture(Color, BoardIn, BoardOut, PlayerFrom, PlayerTo):-
+    player(Color, AFrom, LFrom, PFrom, SFrom),
+    Player = [Color, AFrom, LFrom, PFrom, SFrom],
+    getColorOfEnemy(Color, ColorEnemy),
+    player(ColorEnemy, ATo, LTo, PTo, STo),
+    Enemy = [ColorEnemy, ATo, LTo, PTo, STo],
+    computerLevel(2),
+    findBestFirstMove(BoardIn, Player, Enemy, RFrom, CFrom, RTo, CTo),
+    moveAndCapture(Color,RFrom,CFrom,RTo,CTo,BoardIn,BoardOut, PlayerFrom, PlayerTo),
+    printBoard(BoardOut),
+    nl.
 
 checkIfNoLegs([]).    
 checkIfNoLegs([L|Legs]):-
@@ -316,6 +386,29 @@ userCreateOrUpdate(3, Color, BoardIn, BoardOut, PlayerOut):-
     readCoords(UserRow, UserCol), 
     cliToLogicCoords(UserRow, UserCol, Row, Col),
     addLeg(Color, Row, Col, BoardIn, BoardOut, PlayerOut).
+    
+botCreateOrUpdate(Color, BoardIn, BoardOut, PlayerOut):-
+    player(Color, AFrom, LFrom, PFrom, SFrom),
+    Player = [Color, AFrom, LFrom, PFrom, SFrom],
+    computerLevel(1),
+    randomMoveCreateOrUpdate(BoardIn, Player,Move),
+    Move = [Type, Row, Col],
+    botCreateOrUpdateByType(Type, Row, Col, Color, BoardIn, BoardOut, PlayerOut).
+    
+botCreateOrUpdate(Color, BoardIn, BoardOut, PlayerOut):-
+    player(Color, AFrom, LFrom, PFrom, SFrom),
+    Player = [Color, AFrom, LFrom, PFrom, SFrom],
+    computerLevel(2),
+    bestMoveCreateOrUpdate(BoardIn, Player,BestMove),
+    BestMove = [Type, Row, Col],
+    botCreateOrUpdateByType(Type, Row, Col, Color, BoardIn, BoardOut, PlayerOut).
+    
+botCreateOrUpdateByType('creation', Row, Col, Color, BoardIn, BoardOut, PlayerOut):-
+    createAdaptoid(Color, Row, Col, BoardIn, BoardOut, PlayerOut).
+botCreateOrUpdateByType('addLeg', Row, Col, Color, BoardIn, BoardOut, PlayerOut):-
+    addLeg(Color, Row, Col, BoardIn, BoardOut, PlayerOut).
+botCreateOrUpdateByType('addPincer', Row, Col, Color, BoardIn, BoardOut, PlayerOut):-
+    addPincer(Color, Row, Col, BoardIn, BoardOut, PlayerOut).
 	
 readCoords(Row, Col) :-  
 	write('Row '), read(Row), 
