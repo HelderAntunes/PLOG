@@ -198,6 +198,30 @@ setLevel(Type):-
     write('Enter computer level (1-easy 2-hard): '),
     read(Option),
     assert(computerLevel(Option)).
+	
+initGame :- 
+	write('***********************************'), nl,
+	write('*                                 *'), nl,
+	write('*          Adaptoid Game          *'), nl,
+	write('*                                 *'), nl,
+	write('*              PLAY               *'), nl, 
+	write('*       1 - human vs human        *'), nl,
+	write('*       2 - human vs cpu          *'), nl,
+	write('*       3 - cpu vs cpu            *'), nl,
+	write('*       4 - exit                  *'), nl,
+	write('*                                 *'), nl,
+	write('***********************************'), nl,
+	write('Option: '), read(Option), 
+	select_mode_game(Option).
+
+
+select_mode_game(1) :-
+	game(hh).
+select_mode_game(2) :-
+	game(hc).
+select_mode_game(3) :-
+	game(cc).
+select_mode_game(4).
     
 % game(Type)
 game(Type):-
