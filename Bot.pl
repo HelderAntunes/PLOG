@@ -12,7 +12,7 @@ value(Board, Player, Enemy, Value):-
     
     countEndangeredAdaptoids(Board, Player, Enemy, Num, NumE),
 	
-    Value is NumPieces - NumPiecesE + StarvingE - Starving + NumE - Num, !.
+    Value is 2*NumPieces - 2*NumPiecesE + StarvingE - Starving + NumE - Num, !.
 
 
 countStarvingAdaptoids(Color, Board, Num) :-
@@ -75,21 +75,24 @@ countEndangeredAdaptoids(Board, Player, Enemy, Num, NumE):-
 % countEndangeredAdaptoidsAux(+Color, + Board, + Pieces, + PiecesEnemy, - Num)
 countEndangeredAdaptoidsAux(_, _, _, [], 0).    
 countEndangeredAdaptoidsAux(Color, Board, Pieces, [Enemy | PiecesEnemy], Num):-
-    countDirectThreats(Color, Board, Pieces, Enemy, N1),
+    pieceIsInDanger(Color, Board, Pieces, Enemy),
     countEndangeredAdaptoidsAux(Color, Board, Pieces, PiecesEnemy, N2),
-    Num is N1 + N2.
+    Num is 1 + N2.
+countEndangeredAdaptoidsAux(Color, Board, Pieces, [_ | PiecesEnemy], Num):-
+    countEndangeredAdaptoidsAux(Color, Board, Pieces, PiecesEnemy, Num).
    
 % conta o numero de ataques de uma peca inimiga contra as pecas do jogador
-% countDirectThreats('Color, + Board, + Pieces, + Enemy, - Num)   
-countDirectThreats(_, _, [], _, 0).
-countDirectThreats(Color, Board, [Piece|Pieces], Enemy, Num):-
+% pieceIsInDanger('Color, + Board, + Pieces, + Enemy, - Num)   
+pieceIsInDanger(Color, Board, [Piece|Pieces], Enemy):-
     Piece = [RowFrom, ColFrom],
     Enemy = [RowTo, ColTo],
-    moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,Board,_, _, _),
-    countDirectThreats(Color, Board, Pieces, Enemy, N1),
-    Num is N1 + 1 .
-countDirectThreats(Color, Board, [_|Pieces], Enemy, Num):-
-    countDirectThreats(Color, Board, Pieces, Enemy, Num).
+	getPiece(RowFrom, ColFrom, Board, PieceFrom),
+	getPiece(RowTo, ColTo, Board, PieceTo),
+	PieceFrom = [_,Legs,PincersFrom], PieceTo = [_,_,PincersTo], 
+	thereIsPath([RowFrom,ColFrom], [RowTo,ColTo], Legs, Board),
+	(PincersFrom > PincersTo;
+	PincersFrom =< PincersTo,
+    pieceIsInDanger(Color, Board, Pieces, Enemy)).
    
 %For testing only  
 testValue(Value):-
