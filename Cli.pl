@@ -202,12 +202,12 @@ setLevel(Type):-
 % game(Type)
 game(Type):-
     %inicializações
-	boardToTestCaptureHungryAdaptoids(InitBoard), 
+	boardInitGame(InitBoard), 
     assert(board(InitBoard)),
     % player(color, adaptoids, legs, pincers, score)
 	assert(player(w, 12, 12, 12, 0)), 
     assert(player(b, 12, 12, 12, 0)),
-    assert(turnColor(b)),
+    assert(turnColor(w)),
     setLevel(Type),
     %ciclo de jogo
     repeat,
@@ -285,7 +285,7 @@ play(hc, b, w):-
     %jogada
 	showScores, nl,
 	showMaterialOfPlayers, nl,
-    write('Black playing'), nl, 
+    writeWhoIsPlaying(b), nl, 
     printBoard(BoardIn),
     nl,
     botMoveAndCapture(b, BoardIn, Board1, PlayerFrom, PlayerTo),
@@ -301,6 +301,30 @@ play(hc, b, w):-
     %Update board
     retract(board(BoardIn)),
     assert(board(BoardOut))).
+    
+play(cc, ColorIn, ColorOut):-
+    getColorOfEnemy(ColorIn, ColorOut),
+    board(BoardIn),
+    %jogada
+	showScores, nl,
+	showMaterialOfPlayers, nl,
+    writeWhoIsPlaying(ColorIn), nl, 
+    printBoard(BoardIn),
+    nl,
+    botMoveAndCapture(ColorIn, BoardIn, Board1, PlayerFrom, PlayerTo),
+    updatePlayer(PlayerFrom),
+    updatePlayer(PlayerTo),
+	(testEnd(Board1), retract(board(BoardIn)), assert(board(Board1));
+    nl,
+	(playerStockExpired(ColorIn), captureAdaptoids(ColorOut, Board1, BoardOut);
+    botCreateOrUpdate(ColorIn, Board1, Board2, PlayerOut),
+    updatePlayer(PlayerOut),
+    captureAdaptoids(ColorOut, Board2, BoardOut, PlayerOut2)),
+    updatePlayer(PlayerOut2),
+    %Update board
+    retract(board(BoardIn)),
+    assert(board(BoardOut))),
+    get_char(_).
 	
 playerStockExpired(Color) :-
 	player(Color, Adaptoids, Legs, Pincers, _),
