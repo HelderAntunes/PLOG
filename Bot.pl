@@ -1,6 +1,7 @@
 :- use_module(library(random)).
 
-%       +       +      +      -
+% calcula o valor do tabuleiro para um jogador
+% value( + Board, + Player, + Enemy, - Value):-
 value(Board, Player, Enemy, Value):-
     countPlayerPieces(Player, Board, NumPieces),
     countEnemiesPieces(Enemy, Board, NumPiecesE),
@@ -129,7 +130,8 @@ valid_moves(Board, [Color|_], ListOfMoves) :-
 valid_moves_aux([], _, []).
 valid_moves_aux([[RFrom,CFrom]|Ps], Board, ListOfMoves) :-
 	getPiece(RFrom, CFrom, Board, [_, Legs, _]),
-	findall([RFrom, CFrom, RTo, CTo], thereIsPath([RFrom, CFrom], [RTo, CTo], Legs, Board), L1), 
+	findall([RFrom, CFrom, RTo, CTo], 
+	thereIsPath([RFrom, CFrom], [RTo, CTo], Legs, Board), L1), 
 	valid_moves_aux(Ps, Board, L2),
 	append(L1, L2, ListOfMoves). 
 
@@ -145,7 +147,7 @@ createAdaptoidValid(Row, Column, Board, [Color, Adaptoids|_]) :-
     Piece = empty, 
 	neighborValid(Row, Column, _, _, Color, Board).
 
-% valid_moves_addLeg(Board, Player, ListOfMoves)
+% valid_moves_addLeg( + Board, + Player, - ListOfMoves)
 % Move = [Row, Col]
 valid_moves_addLeg(Board, Player, ListOfMoves) :-
 	findall([R, C], addLegValid(R, C, Board, Player), ListOfMoves2),
@@ -158,7 +160,7 @@ addLegValid(Row, Column, Board, [Color, _, Legs |_]) :-
 	Total is Legs2 + Pincers + 1,
 	Total =< 6.
 	
-% valid_moves_addPincer(Board, Player, ListOfMoves)
+% valid_moves_addPincer( + Board, + Player, - ListOfMoves)
 % Move = [Row, Col]
 valid_moves_addPincer(Board, Player, ListOfMoves) :-
 	findall([R, C], addPincerValid(R, C, Board, Player), ListOfMoves2),

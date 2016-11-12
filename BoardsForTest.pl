@@ -23,15 +23,26 @@ boardInitGame(
         [empty, empty, empty, empty] 
         ]). 
 		
+boardMidGame(
+        [
+        [empty, empty, empty, empty], 
+        [empty, empty, empty, empty, empty],
+        [empty, empty, empty, empty, empty, empty],
+        [empty, [w, 3, 3], empty, empty, [b, 0, 0], empty, empty],
+        [empty, empty, empty, [w, 3, 0], empty, empty],
+        [empty, empty, empty, empty, empty],
+        [empty, empty, empty, empty] 
+        ]). 
+		
 % 2 pecas brancas irao desaparecer, e 2 pretas
 boardToTestCaptureHungryAdaptoids(
         [
-        [empty, empty, empty, [b, 1, 2]], 
-        [empty, empty, empty, empty, empty],
-        [empty, empty, empty, empty, empty, empty],
+        [[w, 4, 0], empty, empty, [b, 1, 2]], 
+        [empty, [w, 4, 0], empty, empty, empty],
+        [empty, empty, empty, empty, [w, 4, 0], empty],
         [empty, [w, 0, 0], [w, 3, 3], empty, empty, [b, 6, 0], [b, 2, 3]],
-        [empty, empty, empty, empty, empty, empty],
-        [empty, empty, empty, empty, empty],
+        [[w, 4, 0], empty, empty, empty, empty, empty],
+        [empty, empty, empty, empty, [w, 4, 0]],
         [[w, 4, 0], empty, empty, empty] 
         ]). 
 
