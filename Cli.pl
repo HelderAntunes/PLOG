@@ -178,6 +178,16 @@ showResults:-
     write('White '), write(WhiteScore), write(' - '), write(BlackScore), write(' Black'), nl,
     writeWhoWon(WhiteScore,BlackScore).
     
+writeWhoWon(_,_) :-
+    board(Board),
+    findall([R,C], getPiece(R,C,Board,[w|_]), Pieces),
+    Pieces = [],
+    write('Black won!!!'), nl .
+writeWhoWon(_,_) :-
+    board(Board),
+    findall([R,C], getPiece(R,C,Board,[b|_]), Pieces),
+	Pieces = [],
+    write('White won!!!'), nl .
 writeWhoWon(WhiteScore,BlackScore):-
     WhiteScore > BlackScore, !,
     write('White won!!!'), nl .
@@ -246,7 +256,7 @@ game(Type):-
     retract(player(w,_,_,_,_)),
     retract(player(b,_,_,_,_)), 
 	retract(turnColor(_)),
-    retract(computerLevel(_)).
+    retractall(computerLevel).
     
 % writeWhoIsPlaying(Color)
 writeWhoIsPlaying(w):-

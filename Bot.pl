@@ -227,25 +227,10 @@ test_findBestFirstMove :-
 %Choses the best move to be done in this part of the game returns BestMove = [Type,Row,Column].
 %bestMoveCreateOrUpdate(+Board, +Player, -BestMove   
 bestMoveCreateOrUpdate(Board, Player,BestMove):-
-    setof([Value, R, C], valueOfCreation(R, C, Board, Player, Value), ValuesOfCreation),
-    last(ValuesOfCreation, BestCreation),
-    setof([Value, R, C], valueOfAddLeg(R, C, Board, Player, Value), ValuesOfAddLeg),
-    last(ValuesOfAddLeg, BestAddLeg),
-    setof([Value, R, C], valueOfAddPincer(R, C, Board, Player, Value), ValuesOfAddPincer),
-    last(ValuesOfAddPincer, BestAddPincer),
-    chooseBestMoveCreateOrUpdate(BestCreation,BestAddLeg,BestAddPincer,BestMove).
-%For the unlikely case all adaptoids have max evolution
-bestMoveCreateOrUpdate(Board, Player,['creation',R,C]):-
-    setof([Value, R, C], valueOfCreation(R, C, Board, Player, Value), ValuesOfCreation),
-    getBest(ValuesOfCreation, BestCreation),
-    BestCreation = [_,R,C].
-%In case no adaptoids can be created
-bestMoveCreateOrUpdate(Board, Player,BestMove):-
-    setof([Value, R, C], valueOfAddLeg(R, C, Board, Player, Value), ValuesOfAddLeg),
-    last(ValuesOfAddLeg, BestAddLeg),
-    setof([Value, R, C], valueOfAddPincer(R, C, Board, Player, Value), ValuesOfAddPincer),
-    last(ValuesOfAddPincer, BestAddPincer),
-    chooseBestMoveCreateOrUpdate([-10000,0,0],BestAddLeg,BestAddPincer,BestMove).     
+    setof([Value, Type, R, C], valueOfCreateOrUpdate(Type, R, C, Board, Player, Value), Values),
+    last(Values, [MaxValue| _]),
+    getCreateOrUpdateMaxValue(MaxValue, Values , BestMoves),
+    random_member(BestMove, BestMoves).  
  
 %Returns list of enemy player status
 getEnemy(Color, Enemy):-
@@ -253,32 +238,40 @@ getEnemy(Color, Enemy):-
     player(ColorEnemy, Adaptoids, Legs, Pincers, Score),
     Enemy = [ColorEnemy, Adaptoids, Legs, Pincers, Score].
 
-%Given the coordinates the board and the player returns the value of the creation move
-%valueOfCreation(+R, +C, +BoardIn, +Player, -Value)    
-valueOfCreation(R, C, BoardIn, Player, Value):-
+%Given the coordinates the board and the player returns the value of the move of type Type
+%valueOfCreation(+Type, +R, +C, +BoardIn, +Player, -Value)    
+valueOfCreateOrUpdate('creation', R, C, BoardIn, Player, Value):-
     Player = [Color | _],
     getEnemy(Color, Enemy),
     createAdaptoidValid(R, C, BoardIn, Player), 
     createAdaptoid(Color, R, C, BoardIn, BoardOut, PlayerOut),
-    value(BoardOut, PlayerOut, Enemy, Value).	
-
-%Given the coordinates the board and the player returns the value of adding a leg
-%valueOfAddLeg(+R, +C, +BoardIn, +Player, -Value)       
-valueOfAddLeg(R, C, BoardIn, Player, Value):-
+    value(BoardOut, PlayerOut, Enemy, Value).
+    
+valueOfCreateOrUpdate('addLeg', R, C, BoardIn, Player, Value):-
     Player = [Color | _],
     getEnemy(Color, Enemy),
     addLegValid(R, C, BoardIn, Player), 
     addLeg(Color, R, C, BoardIn, BoardOut, PlayerOut),
-    value(BoardOut, PlayerOut, Enemy, Value).	
-
-%Given the coordinates the board and the player returns the value of adding a pincer
-%valueOfAddPincer(+R, +C, +BoardIn, +Player, -Value)      
-valueOfAddPincer(R, C, BoardIn, Player, Value):-
+    value(BoardOut, PlayerOut, Enemy, Value).
+    
+valueOfCreateOrUpdate('addPincer', R, C, BoardIn, Player, Value):-
     Player = [Color | _],
     getEnemy(Color, Enemy),
     addPincerValid(R, C, BoardIn, Player), 
     addPincer(Color, R, C, BoardIn, BoardOut, PlayerOut),
     value(BoardOut, PlayerOut, Enemy, Value).
+
+%Get the list of best moves
+%getCreateOrUpdateMaxValue(+MaxValue, +Moves , -BestMoves)
+getCreateOrUpdateMaxValue(_, [] , []).    
+getCreateOrUpdateMaxValue(MaxValue, [M|Moves] , [Move|BestMoves]):-
+    M = [Value|Move],
+    Value =:= MaxValue,
+    getCreateOrUpdateMaxValue(MaxValue, Moves , BestMoves).
+getCreateOrUpdateMaxValue(MaxValue, [M|Moves] , BestMoves):-
+    M = [Value|_],
+    Value =\= MaxValue,
+    getCreateOrUpdateMaxValue(MaxValue, Moves , BestMoves).
 
 %choses the best among the best of each type of move returns BestMove=[Type,Row,Column]
 %chooseBestMoveCreateOrUpdate(+BestCreation,+BestAddLeg,+BestAddPincer,-BestMove)	
