@@ -1,13 +1,13 @@
 :- use_module(library(lists)).
 
-% Obter uma peca do tabuleiro
+% Get piece from board
 %	      +      +      +      -
 getPiece(Row, Column, Board, Piece):-
 	nth1(Row, Board, R),
 	nth1(Column, R, Piece).
 getPiece([Row,Col], Board, Piece) :- getPiece(Row, Col, Board, Piece).
 
-% Substituir uma casa do tabuleiro (vazia ou preenchida) por uma peca
+% Replace board cell (empty ou not) by a piece
 %         +      +       +       +       -
 setPiece(1, Column, Piece, [B|Bs], [ModRow|Bs]):-
 	setPieceInRow(Column, Piece, B, ModRow), !.
@@ -22,7 +22,7 @@ setPieceInRow(Col, Piece, [R|RowIn], [R|RowOut]):-
 	C1 is Col -1,
 	setPieceInRow(C1, Piece, RowIn, RowOut).
 
-% Mover uma peca no tabuleiro e capturar, se possivel, pecas inimigas
+% Move a piece in board and capture, if possible, enemies
 % moveAndCapture( + Color, + RowFrom, + ColFrom, + RowTo, + ColTo, + BoardIn, + BoardOut)
 moveAndCapture(Color,RowFrom,ColFrom,RowTo,ColTo,BoardIn,BoardOut, PlayerFrom, PlayerTo):-
     getPiece(RowFrom, ColFrom, BoardIn, PieceFrom),
@@ -84,9 +84,9 @@ takePiecesFromPlayer([NAdaptoids, NLegs, NPincers], [Color, Adaptoids, Legs, Pin
 	NewPincers is Pincers - NPincers,
 	NewAdaptoids >= 0, NewLegs >= 0, NewPincers >= 0.
 	
-% Se existe um caminho entre 'NoInicio' e 'NoFim' com distancia menor ou igual
-% a 'DistMax', retorna 'yes'.
-% caminho( + NoInicio, + NoFim, - Lista, + DistMax, + Board)
+% If there is a path between 'NoInicio' and 'NoFim' with distance less or equal
+% to 'DistMax', returns 'yes'.
+% thereIsPath( + NoInicio, + NoFim, - Lista, + DistMax, + Board)
 thereIsPath(NoInicio, NoFim, DistMax, Board) :-
 	getPiece(NoInicio, Board, P1),
 	P1 \= empty,
@@ -134,7 +134,7 @@ generateEdges(RowFromCli, ColFromCli, RowToCli, ColToCli) :-
 	
 validPosition(R, C, Board) :- getPiece(R, C, Board, _).
 
-% Criar um adaptoid basico de uma cor definida
+% Create basic adaptoid of give color
 % createAdaptoid( + Color, + Row, + Column, + BoardIn, - BoardOut)
 createAdaptoid(Color, Row, Column, BoardIn, BoardOut, PlayerOut):-
     getPiece(Row,Column,BoardIn, Piece),
@@ -149,7 +149,7 @@ neighborValid(Row, Col, NeighborRow, NeighborCol, Color, Board) :-
 	connected([Row,Col], [NeighborRow, NeighborCol], Board),
 	getPiece(NeighborRow, NeighborCol, Board, [Color|_]).
 
-% Adicionar uma tenaz de uma determinada cor a uma peca do tabuleiro
+% Add pincer of given colour to a piece in board
 %           +     +      +       +        -
 addPincer(Color, Row, Column, BoardIn, BoardOut, PlayerOut):-
    getPiece(Row,Column,BoardIn, Piece),
@@ -164,7 +164,7 @@ addPincer(Color, Row, Column, BoardIn, BoardOut, PlayerOut):-
    setPiece(Row, Column, P, BoardIn, BoardOut).
 
 
-% Adicionar uma perna de uma determinada cor a uma peca do tabuleiro
+% Add leg of given colour to a piece in board
 %        +     +      +       +        -
 addLeg(Color, Row, Column, BoardIn, BoardOut, PlayerOut):-
    getPiece(Row,Column,BoardIn, Piece),
@@ -178,7 +178,7 @@ addLeg(Color, Row, Column, BoardIn, BoardOut, PlayerOut):-
    P = [Color, L, Pincers],
    setPiece(Row, Column, P, BoardIn, BoardOut).
 
-% Capturar adaptoid's com fome de uma determinada cor.
+% Capture starving adaptoids of a given colour
 % captureAdaptoids( + Color, + BoardIn, - BoardOut)
 captureAdaptoids(Color, BoardIn, BoardOut,PlayerOut) :-
 	findall([R,C], getPiece(R,C,BoardIn,[Color|_]), Pieces),

@@ -1,6 +1,6 @@
 :- use_module(library(random)).
 
-% calcula o valor do tabuleiro para um jogador
+% Calculate the value of a board to a given player
 % value( + Board, + Player, + Enemy, - Value):-
 value(Board, Player, Enemy, Value):-
     countPlayerPieces(Player, Board, NumPieces),
@@ -60,9 +60,9 @@ countEnemiesOnBoard([_|Pieces], Num):-
     countEnemiesOnBoard(Pieces, N1),
 	Num is 2 + N1.
 
-% conta o numero de pecas em perigo de serem capturadas:
-% do jogador (Num);
-% do jogador inimigo(NumE) 
+% Count the number of pieces in danger of capture of:
+% player (Num);
+% enemy(NumE) 
 % countEndangeredAdaptoids( + Board, + Player, + Enemy, - Num, - NumE)
 countEndangeredAdaptoids(Board, Player, Enemy, Num, NumE):-
     Player = [Color | _],
@@ -72,7 +72,7 @@ countEndangeredAdaptoids(Board, Player, Enemy, Num, NumE):-
     countEndangeredAdaptoidsAux(Color, Board, Pieces, PiecesEnemy, NumE),
     countEndangeredAdaptoidsAux(ColorEnemy, Board, PiecesEnemy, Pieces, Num).
 
-% conta o numero de ataques das pecas inimigas as pecas do jogador
+% Count the number of atacks from enemy's pieces to the player's
 % countEndangeredAdaptoidsAux(+Color, + Board, + Pieces, + PiecesEnemy, - Num)
 countEndangeredAdaptoidsAux(_, _, _, [], 0).    
 countEndangeredAdaptoidsAux(Color, Board, Pieces, [Enemy | PiecesEnemy], Num):-
@@ -82,7 +82,7 @@ countEndangeredAdaptoidsAux(Color, Board, Pieces, [Enemy | PiecesEnemy], Num):-
 countEndangeredAdaptoidsAux(Color, Board, Pieces, [_ | PiecesEnemy], Num):-
     countEndangeredAdaptoidsAux(Color, Board, Pieces, PiecesEnemy, Num).
    
-% conta o numero de ataques de uma peca inimiga contra as pecas do jogador
+% Count the number of atacks from an enemy's piece to the player's
 % pieceIsInDanger('Color, + Board, + Pieces, + Enemy, - Num)   
 pieceIsInDanger(Color, Board, [Piece|Pieces], Enemy):-
     Piece = [RowFrom, ColFrom],
@@ -174,7 +174,7 @@ addPincerValid(Row, Column, Board, [Color, _, _, Pincers |_]) :-
 	Total =< 6.
 
 	
-% Encontra a melhor jogada possivel no primeiro movimento para o jogador 'Player'.
+% Finds the best move possible in the Player's first move in a turn
 % Uma jogada e definida como: [RFrom, CFrom, RTo, CTo].
 % findBestFirstMove( + Board, + Player, + Enemy, - RFrom, - CFrom, - RTo, - CTo) 
 findBestFirstMove(Board, Player, Enemy, RFrom, CFrom, RTo, CTo) :-

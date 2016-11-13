@@ -235,7 +235,7 @@ select_mode_game(4).
     
 % game(Type)
 game(Type):-
-    %inicializações
+    % initializations
 	boardInitGame(InitBoard), 
     assert(board(InitBoard)),
     % player(color, adaptoids, legs, pincers, score)
@@ -243,7 +243,7 @@ game(Type):-
     assert(player(b, 12, 12, 12, 0)),
     assert(turnColor(w)),
     setLevel(Type),
-    %ciclo de jogo
+    % game cycle
     repeat,
         turnColor(ColorIn),
         once(play(Type, ColorIn, ColorOut)),
@@ -251,6 +251,7 @@ game(Type):-
         assert(turnColor(ColorOut)), 
 		board(B),
         testEnd(B),
+    printBoard(B), nl,
     showResults,
     retract(board(_)),
     retract(player(w,_,_,_,_)),
@@ -268,7 +269,7 @@ writeWhoIsPlaying(b):-
 play(hh, ColorIn, ColorOut):-
     getColorOfEnemy(ColorIn, ColorOut),
     board(BoardIn),
-    %jogada
+    % move
 	showScores, nl,
 	showMaterialOfPlayers, nl,
     writeWhoIsPlaying(ColorIn), nl,
@@ -292,7 +293,7 @@ play(hh, ColorIn, ColorOut):-
     
 play(hc, w, b):-
     board(BoardIn),
-    %jogada
+    % move
 	showScores, nl,
 	showMaterialOfPlayers, nl,
     writeWhoIsPlaying(w), nl,
@@ -316,7 +317,7 @@ play(hc, w, b):-
     
 play(hc, b, w):-
     board(BoardIn),
-    %jogada
+    % move
 	showScores, nl,
 	showMaterialOfPlayers, nl,
     writeWhoIsPlaying(b), nl, 
@@ -339,7 +340,7 @@ play(hc, b, w):-
 play(cc, ColorIn, ColorOut):-
     getColorOfEnemy(ColorIn, ColorOut),
     board(BoardIn),
-    %jogada
+    % move
 	showScores, nl,
 	showMaterialOfPlayers, nl,
     writeWhoIsPlaying(ColorIn), nl, 
